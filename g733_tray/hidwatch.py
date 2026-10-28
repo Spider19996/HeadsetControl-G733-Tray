@@ -1,9 +1,9 @@
-"""Liest den hidraw-Knoten des Dongles ereignisgesteuert und meldet Ein-/Ausschalten.
+"""Reads the dongle's hidraw node event-driven and reports power on/off.
 
-Meldung `11 ff 08 .. VV VV FF ..`: Bytes 4-5 sind die Akkuspannung in mV, 0 = Headset aus.
-Byte 6 ist 0x01 im Betrieb und 0x03 beim Laden (Bit 1 = lädt, aus Mitschnitten abgeleitet).
-Alle anderen Meldungen (z. B. `01 00 00 00 00` oder die Licht-Quittungen `11 ff 04 ..`)
-werden ignoriert.
+Report `11 ff 08 .. VV VV FF ..`: bytes 4-5 are the battery voltage in mV, 0 = headset off.
+Byte 6 is 0x01 in operation and 0x03 while charging (bit 1 = charging, derived from captures).
+All other reports (e.g. `01 00 00 00 00` or the light acknowledgements `11 ff 04 ..`)
+are ignored.
 """
 import errno
 import glob
@@ -21,21 +21,21 @@ log = logging.getLogger("g733.hid")
 
 
 def parse_power(report: bytes) -> Optional[bool]:
-    """True/False für eine Strom-Meldung, None für alles andere."""
+    """True/False for a power report, None for everything else."""
     if len(report) < 6 or report[0] != 0x11 or report[1] != 0xFF or report[2] != 0x08:
         return None
     return ((report[4] << 8) | report[5]) != 0
 
 
 def parse_charging(report: bytes) -> Optional[bool]:
-    """True/False für den Ladezustand einer Strom-Meldung, sonst None."""
+    """True/False for the charging state of a power report, otherwise None."""
     if parse_power(report) is None or len(report) < 7:
         return None
     return bool(report[6] & 0x02)
 
 
 def find_nodes(vendor=VENDOR_ID, product=PRODUCT_ID):
-    """/dev/hidrawN-Pfade über sysfs (HID_ID in uevent), die Nummer ist nicht stabil."""
+    """/dev/hidrawN paths via sysfs (HID_ID in uevent); the number is not stable."""
     nodes = []
     for uevent in sorted(glob.glob("/sys/class/hidraw/hidraw*/device/uevent")):
         try:
@@ -50,8 +50,8 @@ def find_nodes(vendor=VENDOR_ID, product=PRODUCT_ID):
 
 
 class HidWatcher(QObject):
-    power_changed = pyqtSignal(bool)  # nur bei echtem Wechsel
-    charging_changed = pyqtSignal(bool)  # nur bei echtem Wechsel (nicht beim ersten Report)
+    power_changed = pyqtSignal(bool)  # only on a real change
+    charging_changed = pyqtSignal(bool)  # only on a real change (not on the first report)
 
     def __init__(self, vendor=VENDOR_ID, product=PRODUCT_ID, parent=None):
         super().__init__(parent)
@@ -68,7 +68,7 @@ class HidWatcher(QObject):
         self._open()
 
     def retarget(self, vendor, product):
-        """Anderes Gerät überwachen (Einstellung geändert); der Zustand beginnt neu."""
+        """Watch another device (setting changed); the state starts over."""
         if (vendor, product) == (self._vendor, self._product):
             return
         log.info("now watching %04x:%04x instead of %04x:%04x", vendor, product, self._vendor, self._product)
@@ -92,7 +92,7 @@ class HidWatcher(QObject):
         if self._notifiers:
             self._retry.stop()
         elif not self._retry.isActive():
-            self._retry.start()  # Dongle fehlt: gelegentlich erneut suchen
+            self._retry.start()  # dongle missing: search again from time to time
 
     def _readable(self, fd):
         try:
@@ -100,7 +100,7 @@ class HidWatcher(QObject):
                 self._handle(os.read(fd, 64))
         except BlockingIOError:
             pass
-        except OSError as err:  # ENODEV beim Abziehen des Dongles
+        except OSError as err:  # ENODEV when the dongle is unplugged
             log.warning("read error (%s), closing node", errno.errorcode.get(err.errno, err.errno))
             self._close(fd)
 
@@ -112,7 +112,7 @@ class HidWatcher(QObject):
         if on != self._power:
             self._power = on
             self.power_changed.emit(on)
-        charging = parse_charging(report) if on else None  # beim Ausschalten steht dort 0
+        charging = parse_charging(report) if on else None  # when switching off, this is 0
         if charging is not None and charging != self._charging:
             known = self._charging is not None
             self._charging = charging
@@ -129,7 +129,7 @@ class HidWatcher(QObject):
         except OSError:
             pass
         if report and not self._notifiers:
-            if self._power is not False:  # ohne Dongle ist das Headset nicht erreichbar
+            if self._power is not False:  # without the dongle the headset is not reachable
                 self._power = False
                 self.power_changed.emit(False)
             self._retry.start()

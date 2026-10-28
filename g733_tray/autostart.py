@@ -1,4 +1,4 @@
-"""Desktop-Einträge: Autostart (~/.config/autostart) und Starter im Anwendungsmenü."""
+"""Desktop entries: autostart (~/.config/autostart) and launcher in the application menu."""
 import os
 import sys
 from pathlib import Path
@@ -9,9 +9,9 @@ DATA_HOME = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "sh
 
 DESKTOP_FILE = CONFIG_HOME / "autostart" / "g733-tray.desktop"
 LAUNCHER_FILE = DATA_HOME / "applications" / "g733-tray.desktop"
-SYSTEM_LAUNCHER_FILE = Path("/usr/share/applications/g733-tray.desktop")  # kommt mit dem .deb-Paket
+SYSTEM_LAUNCHER_FILE = Path("/usr/share/applications/g733-tray.desktop")  # comes with the .deb package
 
-# Beschreibung im Anwendungsmenü, je Sprache ("" = Standard/Englisch)
+# description in the application menu, per language ("" = default/English)
 COMMENTS = {
     "": "Battery level and light control for the Logitech G733",
     "de": "Akkustand und Licht des Logitech G733",
@@ -34,7 +34,7 @@ def _quote(value):
 
 
 def _command():
-    """(Exec, Path) - bevorzugt das installierte Skript `g733-tray`, sonst `python -m` aus dem Quellbaum."""
+    """(Exec, Path) - prefers the installed script `g733-tray`, otherwise `python -m` from the source tree."""
     script = Path(sys.executable).parent / "g733-tray"
     if script.exists():
         return _quote(script), None
@@ -82,7 +82,7 @@ def launcher_installed():
 
 
 def install_launcher():
-    _write(LAUNCHER_FILE, _entry("Categories=AudioVideo;Audio;\nKeywords=Headset;G733;Logitech;Akku;\n"))
+    _write(LAUNCHER_FILE, _entry("Categories=AudioVideo;Audio;\nKeywords=Headset;G733;Logitech;Battery;\nKeywords[de]=Headset;G733;Logitech;Akku;Batterie;\n"))
 
 
 def remove_launcher():

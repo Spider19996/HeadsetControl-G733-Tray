@@ -1,6 +1,6 @@
-"""Français (fr). Schlüssel = Text-ID (siehe tr()-Aufrufe im Code), Wert = Übersetzung.
+"""Français (fr). Key = text ID (see the tr() calls in the code), value = translation.
 
-Die Übersetzung wurde von einer KI erstellt und ist nicht von Muttersprachlern geprüft: Verbesserungen sind willkommen.
+The translation was produced by an AI and has not been reviewed by native speakers: improvements are welcome.
 """
 
 STRINGS = {

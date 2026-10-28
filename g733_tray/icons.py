@@ -1,4 +1,4 @@
-"""Tray-Icons werden zur Laufzeit gezeichnet (Akku-Symbol mit Prozentzahl, keine Bilddateien nötig)."""
+"""Tray icons are drawn at runtime (battery symbol with percentage, no image files needed)."""
 from PyQt6.QtCore import QPointF, QRectF, Qt
 from PyQt6.QtGui import QColor, QFont, QIcon, QPainter, QPainterPath, QPen, QPixmap, QPolygonF
 from PyQt6.QtWidgets import QApplication
@@ -10,7 +10,7 @@ BODY = QRectF(3, 16, 53, 36)
 
 
 def _draw_number(p, text):
-    """Zahl mit dunklem Rand, damit sie auf Füllung und leerem Bereich lesbar bleibt."""
+    """Number with a dark outline so it stays readable on the fill and on the empty area."""
     font = QFont()
     font.setBold(True)
     font.setPixelSize(30 if len(text) < 3 else 24)
@@ -32,7 +32,7 @@ def level_color(level, warn, critical):
 
 
 def status_color(level, charging, powered, warn, critical):
-    """Farbe für Statustext: grün/orange/rot nach Stand, blau beim Laden, grau wenn aus oder unbekannt."""
+    """Colour for status text: green/orange/red by level, blue while charging, grey if off or unknown."""
     if powered is not True:
         return GREY
     return BLUE if charging else level_color(level, warn, critical)
@@ -67,9 +67,9 @@ def battery_icon(level, charging, powered, warn, critical):
 
     if not powered:
         p.setPen(QPen(RED, 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-        p.drawLine(QPointF(8, 60), QPointF(56, 6))  # durchgestrichen = ausgeschaltet
+        p.drawLine(QPointF(8, 60), QPointF(56, 6))  # crossed out = switched off
     elif charging:
-        # Der Prozentwert ist beim Laden unzuverlässig, daher nur ein großer Blitz.
+        # The percentage is unreliable while charging, so only a large bolt.
         bolt = QPolygonF([QPointF(33, 18), QPointF(18, 36), QPointF(27, 36),
                           QPointF(23, 50), QPointF(41, 30), QPointF(32, 30)])
         p.setPen(QPen(QColor("#101010"), 2))

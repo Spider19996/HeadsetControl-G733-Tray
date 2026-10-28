@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installiert g733-tray für den aktuellen Benutzer (kein sudo nötig, außer für --udev).
+# Installs g733-tray for the current user (no sudo needed, except for --udev).
 #   ./install.sh [--udev] [--autostart] [--no-launcher]
 set -eu
 
@@ -14,21 +14,21 @@ for arg in "$@"; do
         --autostart) autostart=1 ;;
         --no-launcher) launcher=0 ;;
         -h|--help) sed -n '2,3p' "$0"; exit 0 ;;
-        *) echo "Unbekannte Option: $arg" >&2; exit 2 ;;
+        *) echo "Unknown option: $arg" >&2; exit 2 ;;
     esac
 done
 
-command -v python3 >/dev/null || { echo "python3 fehlt." >&2; exit 1; }
+command -v python3 >/dev/null || { echo "python3 is missing." >&2; exit 1; }
 python3 -c 'import venv, ensurepip' 2>/dev/null || {
-    echo "Das venv-Modul fehlt (Debian/Ubuntu/PikaOS: sudo apt install python3-venv)." >&2; exit 1; }
-command -v headsetcontrol >/dev/null || echo "Warnung: headsetcontrol (>= 4.2.0) ist nicht installiert, das Programm braucht es zur Laufzeit." >&2
-command -v notify-send >/dev/null || echo "Hinweis: notify-send (libnotify-bin) fehlt, kritische Meldungen haben dann keine erhöhte Dringlichkeit." >&2
+    echo "The venv module is missing (Debian/Ubuntu/PikaOS: sudo apt install python3-venv)." >&2; exit 1; }
+command -v headsetcontrol >/dev/null || echo "Warning: headsetcontrol (>= 4.2.0) is not installed, the program needs it at runtime." >&2
+command -v notify-send >/dev/null || echo "Note: notify-send (libnotify-bin) is missing, so critical notifications will not have a raised urgency." >&2
 
-# PyQt6 muss als Systempaket vorhanden sein: nur dessen Qt kennt den Plasma-Stil (Breeze) des Benutzers.
-# Das PyQt6 aus pip bringt ein eigenes Qt mit, das nur "Fusion" und "Windows" kennt.
+# PyQt6 must be installed as a system package: only its Qt knows the user's Plasma style (Breeze).
+# PyQt6 from pip ships its own Qt, which only knows "Fusion" and "Windows".
 python3 -c 'import PyQt6.QtWidgets' 2>/dev/null || {
     cat >&2 <<'MSG'
-PyQt6 ist nicht als Systempaket installiert. Installiere es und starte ./install.sh erneut:
+PyQt6 is not installed as a system package. Install it and run ./install.sh again:
   Debian/Ubuntu/PikaOS: sudo apt install python3-pyqt6
   Fedora:               sudo dnf install python3-pyqt6
   Arch:                 sudo pacman -S python-pyqt6
@@ -36,8 +36,8 @@ MSG
     exit 1
 }
 
-echo "Installiere nach $prefix ..."
-rm -rf "$prefix/venv"  # frisch anlegen: ein altes venv könnte noch ein PyQt6 aus pip enthalten, das das System-Qt überdeckt
+echo "Installing to $prefix ..."
+rm -rf "$prefix/venv"  # create it fresh: an old venv might still contain PyQt6 from pip, which would shadow the system Qt
 python3 -m venv --system-site-packages "$prefix/venv"
 "$prefix/venv/bin/pip" install --quiet --upgrade pip
 "$prefix/venv/bin/pip" install --quiet --upgrade "$here"
@@ -49,11 +49,11 @@ ln -sf "$prefix/venv/bin/g733-tray" "$bindir/g733-tray"
 [ "$autostart" -eq 1 ] && "$prefix/venv/bin/g733-tray" --install-autostart
 
 if [ "$udev" -eq 1 ]; then
-    echo "Installiere udev-Regel (sudo) ..."
+    echo "Installing udev rule (sudo) ..."
     sudo cp "$here/udev/70-g733-tray.rules" /etc/udev/rules.d/
     sudo udevadm control --reload
     sudo udevadm trigger --subsystem-match=hidraw
 fi
 
-echo "Fertig. Start: g733-tray (oder 'G733 Tray' im Anwendungsmenü)."
-case ":$PATH:" in *":$bindir:"*) ;; *) echo "Hinweis: $bindir ist nicht im PATH." ;; esac
+echo "Done. Start: g733-tray (or 'G733 Tray' in the application menu)."
+case ":$PATH:" in *":$bindir:"*) ;; *) echo "Note: $bindir is not in the PATH." ;; esac

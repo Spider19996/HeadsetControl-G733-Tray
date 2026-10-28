@@ -1,4 +1,4 @@
-"""Logging: Logdatei (wird bei jedem Programmstart geleert) und optional Ausgabe im Terminal (--verbose)."""
+"""Logging: log file (cleared at every program start) and optionally output in the terminal (--verbose)."""
 import logging
 import logging.handlers
 import os
@@ -7,20 +7,20 @@ from pathlib import Path
 
 STATE_DIR = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state") / "g733-tray"
 LOG_PATH = STATE_DIR / "g733-tray.log"
-TEST_LOG_PATH = STATE_DIR / "g733-tray-test.log"  # eigene Datei, damit ein Testlauf das echte Log nicht leert
-MAX_BYTES = 1_000_000  # Sicherung für sehr lange Laufzeiten; reicht für viele Tage
+TEST_LOG_PATH = STATE_DIR / "g733-tray-test.log"  # separate file so a test run does not clear the real log
+MAX_BYTES = 1_000_000  # safeguard for very long runtimes; enough for many days
 
 _active_path = None
 
 
 def log_path():
-    """Pfad der aktuellen Logdatei oder None, wenn sie nicht angelegt werden konnte."""
+    """Path of the current log file, or None if it could not be created."""
     return _active_path
 
 
 def setup(verbose=False, test_mode=False):
-    """Richtet das Logging ein. Ohne --verbose: Datei auf INFO, Terminal nur Warnungen.
-    Mit --verbose: Datei und Terminal auf DEBUG."""
+    """Sets up logging. Without --verbose: file at INFO, terminal only warnings.
+    With --verbose: file and terminal at DEBUG."""
     global _active_path
     logger = logging.getLogger("g733")
     logger.handlers.clear()
@@ -36,7 +36,7 @@ def setup(verbose=False, test_mode=False):
     path = TEST_LOG_PATH if test_mode else LOG_PATH
     try:
         STATE_DIR.mkdir(parents=True, exist_ok=True)
-        path.write_text("")  # bei jedem Start leeren
+        path.write_text("")  # clear at every start
         path.with_name(path.name + ".1").unlink(missing_ok=True)
         handler = logging.handlers.RotatingFileHandler(path, maxBytes=MAX_BYTES, backupCount=1, encoding="utf-8")
         handler.setFormatter(formatter)

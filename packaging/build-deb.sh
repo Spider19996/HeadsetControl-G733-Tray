@@ -1,16 +1,16 @@
 #!/bin/sh
-# Baut dist/g733-tray_<version>_all.deb (Debian, Ubuntu, PikaOS, ...). Benötigt nur dpkg-deb.
+# Builds dist/g733-tray_<version>_all.deb (Debian, Ubuntu, PikaOS, ...). Needs only dpkg-deb.
 set -eu
 
 here=$(cd "$(dirname "$0")/.." && pwd)
 version=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' "$here/g733_tray/__init__.py")
-[ -n "$version" ] || { echo "__version__ in g733_tray/__init__.py nicht gefunden." >&2; exit 1; }
+[ -n "$version" ] || { echo "__version__ not found in g733_tray/__init__.py." >&2; exit 1; }
 
 stage="$here/dist/g733-tray_${version}_all"
 rm -rf "$stage"
 mkdir -p "$stage/DEBIAN"
 
-# Programm ins System-Python (dort liegt auch das Systempaket python3-pyqt6)
+# Program goes into the system Python (that is also where the system package python3-pyqt6 lives)
 pydir="$stage/usr/lib/python3/dist-packages/g733_tray"
 mkdir -p "$pydir"
 for f in "$here"/g733_tray/*.py; do install -m 644 "$f" "$pydir/"; done
@@ -50,17 +50,17 @@ Recommends: libnotify-bin, headsetcontrol
 Installed-Size: $size
 Maintainer: Spider19996 <spider19996@users.noreply.github.com>
 Homepage: https://github.com/Spider19996/HeadsetControl-G733-Tray
-Description: Tray-Programm fuer das Logitech G733 (Akkustand, Licht)
- Zeigt den Akkustand des Logitech G733 (USB-Dongle) als Tray-Icon in KDE Plasma,
- setzt den gespeicherten Lichtzustand nach dem Einschalten neu und warnt bei
- niedrigem Akkustand. Benoetigt headsetcontrol (4.2.0 oder neuer) zur Laufzeit.
+Description: Tray application for the Logitech G733 (battery level, light)
+ Shows the battery level of the Logitech G733 (USB dongle) as a tray icon in KDE Plasma,
+ re-applies the saved light state after power-on and warns when the battery is low.
+ Requires headsetcontrol (4.2.0 or newer) at runtime.
 CONTROL
 
 for script in postinst postrm; do
     cat > "$stage/DEBIAN/$script" <<'HOOK'
 #!/bin/sh
 set -e
-# udev-Regel (hidraw-Zugriff fuer den angemeldeten Benutzer) sofort wirksam machen
+# make the udev rule (hidraw access for the logged-in user) take effect immediately
 if command -v udevadm >/dev/null 2>&1; then
     udevadm control --reload-rules || true
     udevadm trigger --subsystem-match=hidraw || true

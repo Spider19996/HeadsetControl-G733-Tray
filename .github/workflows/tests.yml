@@ -1,4 +1,4 @@
-# Führt bei jedem Push (auf Branches) und bei jedem Pull Request die Tests aus.
+# Runs the tests on every push (to branches) and on every pull request.
 name: tests
 on:
   push:
@@ -8,7 +8,7 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    container: fedora:latest  # aktuelles Python und PyQt6 aus der Distribution, wie beim Programm selbst
+    container: fedora:latest  # current Python and PyQt6 from the distribution, like the program itself
     steps:
       - run: dnf install -y python3-pyqt6
       - uses: actions/checkout@v7

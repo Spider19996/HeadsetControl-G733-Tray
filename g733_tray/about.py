@@ -1,4 +1,4 @@
-"""Angaben für den Info-Reiter: Version, Projektadresse, Installationsart, headsetcontrol-Version."""
+"""Details for the About tab: version, project URL, installation type, headsetcontrol version."""
 import re
 import shutil
 import subprocess
@@ -9,12 +9,12 @@ from .i18n import N_
 
 from . import __version__
 
-USER_VENV = DATA_HOME / "g733-tray" / "venv"  # hier legt install.sh das Programm ab
+USER_VENV = DATA_HOME / "g733-tray" / "venv"  # install.sh puts the program here
 GITHUB_URL = "https://github.com/Spider19996/HeadsetControl-G733-Tray"
 LICENSE = "MIT"
-MIN_HEADSETCONTROL = (4, 2, 0)  # ältere Versionen kennen das G733 bzw. die JSON-Ausgabe nicht vollständig
+MIN_HEADSETCONTROL = (4, 2, 0)  # older versions do not fully support the G733 or the JSON output
 
-# Paketverwaltungen, die sich "wem gehört diese Datei?" fragen lassen
+# package managers that can be asked "who owns this file?"
 PACKAGE_MANAGERS = (
     ("dpkg", ["dpkg", "-S"], N_("install.deb")),
     ("rpm", ["rpm", "-qf"], N_("install.rpm")),
@@ -31,7 +31,7 @@ def _owned_by_package(command, path):
 
 
 def install_kind(module_dir=None, owned_by_package=_owned_by_package, which=shutil.which, user_venv=USER_VENV):
-    """Beschreibt, wie das Programm installiert wurde (aus dem Ort des Pakets abgeleitet)."""
+    """Describes how the program was installed (derived from the location of the package)."""
     here = Path(module_dir or Path(__file__).resolve().parent)
     if (here.parent / "pyproject.toml").exists():
         return N_("install.source_tree")
@@ -46,19 +46,19 @@ def install_kind(module_dir=None, owned_by_package=_owned_by_package, which=shut
 
 
 def parse_version(text):
-    """(4, 2, 0) aus "HeadsetControl 4.2.0"; None, wenn keine Versionsnummer drinsteht."""
+    """(4, 2, 0) from "HeadsetControl 4.2.0"; None if there is no version number in the text."""
     match = re.search(r"(\d+)\.(\d+)(?:\.(\d+))?", text or "")
     return tuple(int(part or 0) for part in match.groups()) if match else None
 
 
 def headsetcontrol_too_old(text):
-    """True, wenn die Versionsangabe bekannt und kleiner als MIN_HEADSETCONTROL ist."""
+    """True if the version is known and lower than MIN_HEADSETCONTROL."""
     version = parse_version(text)
     return version is not None and version < MIN_HEADSETCONTROL
 
 
 def headsetcontrol_version():
-    """Ausgabe von `headsetcontrol --version` (erste Zeile) oder None, wenn nicht installiert."""
+    """Output of `headsetcontrol --version` (first line), or None if it is not installed."""
     binary = shutil.which("headsetcontrol")
     if not binary:
         return None

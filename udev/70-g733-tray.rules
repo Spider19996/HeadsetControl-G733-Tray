@@ -1,3 +1,3 @@
-# Logitech G733 Lightspeed-Dongle (046d:0ab5): hidraw-Zugriff für den angemeldeten Benutzer,
-# damit g733-tray ohne sudo lesen kann.
+# Logitech G733 Lightspeed dongle (046d:0ab5): hidraw access for the logged-in user,
+# so g733-tray can read it without sudo.
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="0ab5", TAG+="uaccess"

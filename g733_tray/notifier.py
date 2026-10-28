@@ -1,4 +1,4 @@
-"""Benachrichtigungen über den Plasma-Dienst org.freedesktop.Notifications."""
+"""Notifications through the Plasma service org.freedesktop.Notifications."""
 import shutil
 
 from PyQt6.QtCore import QProcess
@@ -8,8 +8,8 @@ APP_NAME = "G733 Tray"
 
 
 class Notifier:
-    """Nutzt notify-send (spricht den Standarddienst an) wegen des Urgency-Hints;
-    ohne notify-send fällt es auf QSystemTrayIcon.showMessage zurück."""
+    """Uses notify-send (talks to the default service) because of the urgency hint;
+    without notify-send it falls back to QSystemTrayIcon.showMessage."""
 
     def __init__(self, tray: QSystemTrayIcon):
         self._tray = tray

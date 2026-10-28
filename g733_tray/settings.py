@@ -1,4 +1,4 @@
-"""Einstellungsdialog: Werte der config.json, Sprache, Autostart/Starter, Geräteauswahl, Info und Log."""
+"""Settings dialog: config.json values, language, autostart/launcher, device selection, About and Log."""
 from PyQt6.QtCore import QRegularExpression, Qt, QTimer, QUrl
 from PyQt6.QtGui import QDesktopServices, QFontDatabase, QRegularExpressionValidator, QTextCursor
 from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
@@ -13,7 +13,7 @@ from .config import DEFAULTS
 from .devices import detect_devices
 from .i18n import AUTO, LANGUAGES, tr
 
-MANUAL = "manual"  # Datenwert des Listeneintrags "Andere IDs manuell eingeben"
+MANUAL = "manual"  # data value of the list entry "Enter other IDs manually"
 
 
 class SettingsDialog(QDialog):
@@ -24,7 +24,7 @@ class SettingsDialog(QDialog):
         tabs = QTabWidget()
         layout.addWidget(tabs)
 
-        # --- Benachrichtigungen
+        # --- Notifications
         form = self._page(tabs, tr("settings.tab.notifications"))
         self.notifications = QCheckBox(tr("settings.notify_low"))
         self.notifications.setChecked(config["notifications"])
@@ -48,26 +48,26 @@ class SettingsDialog(QDialog):
         self.launcher = QCheckBox(tr("settings.launcher"))
         self.launcher.setChecked(bool(launcher_installed))
         form.addRow(self.autostart)
-        if launcher_installed is not None:  # None: Starter kommt schon systemweit mit dem Paket
+        if launcher_installed is not None:  # None: the launcher already comes system-wide with the package
             form.addRow(self.launcher)
         self.language = QComboBox()
         self.language.addItem(tr("settings.language_auto"), AUTO)
         for code, name in LANGUAGES.items():
-            self.language.addItem(name, code)  # Eigenname, damit man die Sprache auch im Fremdsprachigen findet
+            self.language.addItem(name, code)  # native name, so the language can be found even in a foreign one
         self.language.setCurrentIndex(max(0, self.language.findData(config["language"])))
         form.addRow(tr("settings.language"), self.language)
 
-        # --- Erweitert
+        # --- Advanced
         form = self._page(tabs, tr("settings.tab.advanced"))
         self.poll = self._spin(config["poll_interval_s"], 5, 3600, " s")
         self.relight = self._spin(config["relight_delay_ms"], 0, 10000, " ms")
         form.addRow(tr("settings.poll_interval"), self.poll)
         form.addRow(tr("settings.relight_delay"), self.relight)
 
-        # --- Gerät
+        # --- Device
         self._device_page(tabs, config)
 
-        # --- Info
+        # --- About
         self._about_page(tabs)
 
         # --- Log
@@ -75,7 +75,7 @@ class SettingsDialog(QDialog):
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
                                    | QDialogButtonBox.StandardButton.RestoreDefaults)
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(tr("button.ok"))  # unabhängig von Qts eigenen Übersetzungen
+        buttons.button(QDialogButtonBox.StandardButton.Ok).setText(tr("button.ok"))  # independent of Qt's own translations
         buttons.button(QDialogButtonBox.StandardButton.Cancel).setText(tr("button.cancel"))
         buttons.button(QDialogButtonBox.StandardButton.RestoreDefaults).setText(tr("button.defaults"))
         buttons.button(QDialogButtonBox.StandardButton.RestoreDefaults).setToolTip(
@@ -87,7 +87,7 @@ class SettingsDialog(QDialog):
 
     @staticmethod
     def _page(tabs, title):
-        """Neuer Reiter mit Formularlayout; Aussehen kommt vom Anwendungsstil des Benutzers."""
+        """New tab with a form layout; the look comes from the user's application style."""
         page = QWidget()
         form = QFormLayout(page)
         form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -113,7 +113,7 @@ class SettingsDialog(QDialog):
         row.addWidget(reset)
         form.addRow(tr("device.headset"), row)
 
-        # Ausweichmöglichkeit, falls das Gerät nicht in der Liste auftaucht
+        # fallback in case the device does not show up in the list
         self.manual_box = QWidget()
         manual = QFormLayout(self.manual_box)
         manual.setContentsMargins(0, 0, 0, 0)
@@ -140,7 +140,7 @@ class SettingsDialog(QDialog):
         self._fill_devices((config["usb_vendor_id"], config["usb_product_id"]))
 
     def _fill_devices(self, wanted):
-        """Liste neu aufbauen: erkannte Geräte, ggf. das eingestellte (nicht gefunden), dann "manuell"."""
+        """Rebuild the list: detected devices, the configured one if needed (not found), then "manual"."""
         self.device_combo.blockSignals(True)
         self.device_combo.clear()
         devices = detect_devices()
@@ -159,7 +159,7 @@ class SettingsDialog(QDialog):
     def _device_choice_changed(self):
         chosen = self.device_combo.currentData()
         self.manual_box.setVisible(chosen == MANUAL)
-        if chosen != MANUAL:  # Felder spiegeln die Auswahl, damit "manuell" mit sinnvollen Werten startet
+        if chosen != MANUAL:  # the fields mirror the selection so that "manual" starts with sensible values
             self.vendor_id.setText(chosen.split(":")[0])
             self.product_id.setText(chosen.split(":")[1])
 
@@ -194,33 +194,33 @@ class SettingsDialog(QDialog):
         layout.addLayout(bar)
 
         path_label = QLabel(f"{tr('common.log_file')}: {log_file if log_file else tr('common.unavailable')}")
-        self._selectable(path_label)  # Pfad markier- und kopierbar
+        self._selectable(path_label)  # path selectable and copyable
         path_label.setWordWrap(True)
         layout.addWidget(path_label)
 
         self.log_view = QPlainTextEdit()
-        self.log_view.setReadOnly(True)  # markier- und kopierbar, aber nicht änderbar
+        self.log_view.setReadOnly(True)  # selectable and copyable, but not editable
         self.log_view.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
         self.log_view.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
         self.log_view.setMinimumSize(640, 280)
         layout.addWidget(self.log_view, 1)
         tabs.addTab(page, tr("settings.tab.log"))
 
-        self._log_offset = 0  # bis hierhin (Bytes) ist die Datei schon angezeigt
+        self._log_offset = 0  # the file has already been shown up to here (bytes)
         self._load_log(full=True)
-        timer = QTimer(self)  # hängt am Dialog und endet mit ihm
+        timer = QTimer(self)  # belongs to the dialog and ends with it
         timer.timeout.connect(lambda: self._log_live.isChecked() and self._load_log())
         timer.start(1500)
 
     def _load_log(self, full=False):
-        """Zeigt das Log. Normalerweise wird nur Neues angehängt, damit Auswahl und Scrollposition bleiben."""
+        """Shows the log. Normally only new content is appended so that selection and scroll position are kept."""
         path = logsetup.log_path()
         if path is None:
             self.log_view.setPlainText(tr("log.none"))
             return
         try:
             size = path.stat().st_size
-            if full or size < self._log_offset:  # neu gelesen oder die Datei wurde geleert/rotiert
+            if full or size < self._log_offset:  # re-read, or the file was cleared/rotated
                 self._log_offset = 0
                 self.log_view.clear()
             if size == self._log_offset:
@@ -233,8 +233,8 @@ class SettingsDialog(QDialog):
             return
         self._log_offset += len(chunk)
         bar = self.log_view.verticalScrollBar()
-        at_bottom = full or bar.value() >= bar.maximum() - 4  # nur mitlaufen, wenn man unten ist
-        cursor = QTextCursor(self.log_view.document())  # eigener Cursor: berührt die Auswahl des Benutzers nicht
+        at_bottom = full or bar.value() >= bar.maximum() - 4  # only follow along if the user is at the bottom
+        cursor = QTextCursor(self.log_view.document())  # own cursor: does not touch the user's selection
         cursor.movePosition(QTextCursor.MoveOperation.End)
         cursor.insertText(chunk.decode("utf-8", errors="replace"))
         if at_bottom:
@@ -246,7 +246,7 @@ class SettingsDialog(QDialog):
         QTimer.singleShot(1500, lambda: self._log_copy_button.setText(tr("log.copy_all")))
 
     def _restore_defaults(self):
-        """Alle Felder auf Standard; Autostart/Starter sind keine Config-Werte und bleiben unberührt."""
+        """All fields to default; autostart/launcher are not config values and stay untouched."""
         self.notifications.setChecked(DEFAULTS["notifications"])
         self.full.setChecked(DEFAULTS["full_charge_notification"])
         self.warn.setValue(DEFAULTS["warn_threshold"])
@@ -262,7 +262,7 @@ class SettingsDialog(QDialog):
         font = name.font()
         font.setBold(True)
         name.setFont(font)
-        header = QWidget()  # Titel links, Kopieren-Button oben rechts
+        header = QWidget()  # title on the left, copy button at the top right
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(0, 0, 0, 0)
         header_layout.addWidget(name)
@@ -298,7 +298,7 @@ class SettingsDialog(QDialog):
 
     @staticmethod
     def _selectable(label):
-        """Text per Maus markierbar (Strg+C) und Links weiter anklickbar."""
+        """Text selectable with the mouse (Ctrl+C) and links still clickable."""
         label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse
                                       | Qt.TextInteractionFlag.LinksAccessibleByMouse)
         return label
@@ -314,11 +314,11 @@ class SettingsDialog(QDialog):
         box.setRange(low, high)
         box.setValue(value)
         box.setSuffix(suffix)
-        box.setMinimumWidth(110)  # einheitliche Feldbreite auf allen Reitern
+        box.setMinimumWidth(110)  # uniform field width on all tabs
         return box
 
     def values(self):
-        """Werte für die config.json."""
+        """Values for config.json."""
         warn, critical = self.warn.value(), self.critical.value()
         return {
             "language": self.language.currentData(),
@@ -328,6 +328,6 @@ class SettingsDialog(QDialog):
             "critical_threshold": min(warn, critical),
             "poll_interval_s": self.poll.value(),
             "relight_delay_ms": self.relight.value(),
-            "usb_vendor_id": self._current_ids()[0],  # leer/ungültig -> Config fällt auf Standard zurück
+            "usb_vendor_id": self._current_ids()[0],  # empty/invalid -> config falls back to the default
             "usb_product_id": self._current_ids()[1],
         }

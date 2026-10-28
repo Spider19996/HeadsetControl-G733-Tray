@@ -1,4 +1,4 @@
-"""Persistente Konfiguration unter ~/.config/g733-tray/config.json."""
+"""Persistent configuration in ~/.config/g733-tray/config.json."""
 import json
 import logging
 import os
@@ -12,17 +12,17 @@ CONFIG_PATH = CONFIG_DIR / "config.json"
 log = logging.getLogger("g733.config")
 
 DEFAULTS = {
-    "usb_vendor_id": "046d",          # USB-Hersteller-ID des Dongles (hex), Standard: Logitech G733
-    "usb_product_id": "0ab5",         # USB-Produkt-ID des Dongles (hex)
-    "language": "auto",               # "auto" (Systemsprache) oder ein Sprachcode, z. B. "de", "en"
-    "light": True,                    # gewünschter Lichtzustand
-    "sidetone": None,                 # None = nicht verwalten, sonst 0-128 (wird nach dem Einschalten gesetzt)
-    "notifications": True,            # Benachrichtigungen bei niedrigem Akkustand
-    "full_charge_notification": True, # Meldung "voll geladen"
-    "warn_threshold": 20,             # Prozent, normale Dringlichkeit
-    "critical_threshold": 10,         # Prozent, hohe Dringlichkeit
-    "poll_interval_s": 60,            # Abgleich per headsetcontrol -b
-    "relight_delay_ms": 1500,         # Wartezeit nach dem Einschalten, bis Licht/Sidetone gesetzt werden
+    "usb_vendor_id": "046d",          # USB vendor ID of the dongle (hex), default: Logitech G733
+    "usb_product_id": "0ab5",         # USB product ID of the dongle (hex)
+    "language": "auto",               # "auto" (system language) or a language code, e.g. "de", "en"
+    "light": True,                    # desired light state
+    "sidetone": None,                 # None = do not manage, otherwise 0-128 (applied after power-on)
+    "notifications": True,            # notifications for a low battery
+    "full_charge_notification": True, # "fully charged" notification
+    "warn_threshold": 20,             # percent, normal urgency
+    "critical_threshold": 10,         # percent, high urgency
+    "poll_interval_s": 60,            # reconciliation via headsetcontrol -b
+    "relight_delay_ms": 1500,         # wait after power-on before light/sidetone are set
 }
 
 
@@ -39,7 +39,7 @@ def _int_or(value, default, low=None, high=None):
 
 
 def normalize_usb_id(value, default):
-    """Vier Hex-Ziffern in Kleinbuchstaben ("0x046D", "46d" -> "046d"); sonst der Standardwert."""
+    """Four hex digits in lower case ("0x046D", "46d" -> "046d"); otherwise the default."""
     text = str(value).strip().lower().removeprefix("0x")
     try:
         number = int(text, 16)
@@ -51,14 +51,14 @@ def normalize_usb_id(value, default):
 class Config:
     def __init__(self, path=CONFIG_PATH, read_only=False):
         self.path = Path(path)
-        self.read_only = read_only  # Testmodus: nie auf die Platte schreiben
+        self.read_only = read_only  # test mode: never write to disk
         self.data = dict(DEFAULTS)
         self._extra = {}
         if not self.reload() and not self.path.exists():
             self.save()
 
     def reload(self):
-        """Liest die Datei neu ein. False, wenn sie fehlt oder unbrauchbar ist (Stand bleibt dann erhalten)."""
+        """Re-reads the file. False if it is missing or unusable (the previous state is then kept)."""
         try:
             raw = json.loads(self.path.read_text())
         except FileNotFoundError:
@@ -74,7 +74,7 @@ class Config:
             if key in DEFAULTS:
                 data[key] = value
             else:
-                self._extra[key] = value  # unbekannte Schlüssel beim Speichern erhalten
+                self._extra[key] = value  # keep unknown keys when saving
         self.data = self._validated(data)
         return True
 

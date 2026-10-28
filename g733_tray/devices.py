@@ -1,4 +1,4 @@
-"""Erkennt angeschlossene, von headsetcontrol unterstützte Headsets (für die Geräteauswahl)."""
+"""Detects connected headsets supported by headsetcontrol (for the device selection)."""
 import json
 import shutil
 import subprocess
@@ -11,7 +11,7 @@ from .i18n import tr
 @dataclass(frozen=True)
 class Device:
     name: str
-    vendor_id: str   # 4 Hex-Ziffern, klein
+    vendor_id: str   # 4 hex digits, lower case
     product_id: str
 
     @property
@@ -24,7 +24,7 @@ class Device:
 
 
 def parse_devices(output):
-    """Liest `headsetcontrol -o json` (ohne -d) und liefert die erkannten Geräte."""
+    """Reads `headsetcontrol -o json` (without -d) and returns the detected devices."""
     try:
         data = json.loads(output)
     except ValueError:
@@ -44,7 +44,7 @@ def parse_devices(output):
 
 
 def detect_devices():
-    """Fragt headsetcontrol nach allen angeschlossenen Geräten. Leer, wenn es fehlt oder nichts findet."""
+    """Asks headsetcontrol for all connected devices. Empty if it is missing or finds nothing."""
     binary = shutil.which("headsetcontrol")
     if not binary:
         return []

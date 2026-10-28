@@ -1,4 +1,4 @@
-"""Asynchroner Wrapper um das headsetcontrol-Kommando (QProcess, seriell abgearbeitet)."""
+"""Asynchronous wrapper around the headsetcontrol command (QProcess, processed serially)."""
 import json
 import logging
 from collections import deque
@@ -10,10 +10,10 @@ from PyQt6.QtCore import QObject, QProcess, QTimer
 BINARY = "headsetcontrol"
 TIMEOUT_MS = 10_000
 
-# Fehlerarten für die Anzeige im Tray
-MISSING = "missing"        # headsetcontrol ist nicht installiert
-NO_DEVICE = "no_device"    # headsetcontrol läuft, findet aber das Gerät nicht (Dongle nicht eingesteckt?)
-FAILED = "failed"          # sonstiger Fehler, Details im Log
+# kinds of error shown in the tray
+MISSING = "missing"        # headsetcontrol is not installed
+NO_DEVICE = "no_device"    # headsetcontrol runs but does not find the device (dongle not plugged in?)
+FAILED = "failed"          # any other error, details in the log
 
 log = logging.getLogger("g733.headsetcontrol")
 
@@ -28,7 +28,7 @@ class BatteryStatus:
 
 
 def parse_battery(output):
-    """Wertet `headsetcontrol -b -o json` aus. Ergebnis: (BatteryStatus, None) oder (None, Fehlerart)."""
+    """Parses `headsetcontrol -b -o json`. Result: (BatteryStatus, None) or (None, error kind)."""
     try:
         data = json.loads(output)
     except ValueError:
@@ -60,28 +60,28 @@ class Headsetcontrol(QObject):
         self._device_args = []
 
     def set_device(self, vendor_id, product_id):
-        """Alle weiteren Aufrufe auf dieses Gerät beschränken (-d VID:PID); IDs als Hex-Strings."""
+        """Restrict all further calls to this device (-d VID:PID); IDs as hex strings."""
         self._device_args = ["-d", f"{vendor_id}:{product_id}"]
 
     def battery(self, callback):
-        """callback(BatteryStatus | None, Fehlerart | None)"""
+        """callback(BatteryStatus | None, error kind | None)"""
         def done(ok, out, missing):
             if missing:
                 callback(None, MISSING)
             else:
-                callback(*parse_battery(out))  # auch bei Exit-Code 1: ohne Gerät kommt trotzdem gültiges JSON
+                callback(*parse_battery(out))  # also with exit code 1: without a device, valid JSON still comes back
         self._enqueue(["-b", "-o", "json"], done)
 
     def set_light(self, on, callback=None):
-        """callback(bool erfolgreich)"""
+        """callback(bool success)"""
         self._enqueue(["-l", "1" if on else "0"], lambda ok, _out, _missing: callback and callback(ok))
 
     def set_sidetone(self, level, callback=None):
-        """level 0-128; callback(bool erfolgreich)"""
+        """level 0-128; callback(bool success)"""
         self._enqueue(["-s", str(level)], lambda ok, _out, _missing: callback and callback(ok))
 
     def version(self, callback):
-        """callback(Ausgabe von --version | None, wenn nicht installiert)"""
+        """callback(output of --version | None if not installed)"""
         self._enqueue(["--version"], lambda ok, out, missing: callback(out.strip() if ok else None),
                       with_device=False)
 
@@ -99,7 +99,7 @@ class Headsetcontrol(QObject):
         proc.finished.connect(lambda code, status: self._finish(
             proc, done, args, code, status == QProcess.ExitStatus.NormalExit, missing=False))
         proc.errorOccurred.connect(lambda err: self._on_error(proc, done, args, err))
-        watchdog = QTimer(proc)  # wird mit dem Prozess zusammen aufgeräumt
+        watchdog = QTimer(proc)  # is cleaned up together with the process
         watchdog.setSingleShot(True)
         watchdog.timeout.connect(proc.kill)
         watchdog.start(TIMEOUT_MS)
@@ -113,7 +113,7 @@ class Headsetcontrol(QObject):
 
     def _finish(self, proc, done, args, code, normal_exit, missing):
         if proc is not self._proc:
-            return  # schon abgeschlossen (Fehler- und finished-Signal)
+            return  # already finished (error and finished signal)
         out = "" if missing else bytes(proc.readAllStandardOutput()).decode(errors="replace")
         proc.deleteLater()
         self._proc = None
@@ -121,7 +121,7 @@ class Headsetcontrol(QObject):
         if not missing:
             log.debug("%s -> exit code %s%s", " ".join(args), code, "" if normal_exit else " (aborted)")
         done(ok, out, missing)
-        # Der Callback kann selbst schon den nächsten Aufruf gestartet haben (dann läuft self._proc):
-        # diesen nicht überschreiben, sonst geht dessen Ergebnis verloren.
+        # The callback may already have started the next call itself (then self._proc is running):
+        # do not overwrite that one, otherwise its result is lost.
         if self._proc is None:
             self._next()

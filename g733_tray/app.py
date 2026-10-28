@@ -1,4 +1,4 @@
-"""Tray-Anwendung: verbindet HID-Wächter, headsetcontrol, Icon und Benachrichtigungen."""
+"""Tray application: connects the HID watcher, headsetcontrol, icon and notifications."""
 import argparse
 import logging
 import os
@@ -24,20 +24,20 @@ from .settings import SettingsDialog
 
 NAME = "G733"
 log = logging.getLogger("g733.app")
-PROBLEMS = {  # Anzeige per tr(PROBLEMS[...])
+PROBLEMS = {  # shown via tr(PROBLEMS[...])
     MISSING: N_("problem.missing"),
     NO_DEVICE: N_("problem.no_device"),
     FAILED: N_("problem.failed"),
 }
 RETRY_POLL_MS = 3000
-HID_GRACE_S = 8  # so lange wird ein "aus" vom Abgleich nach einem HID-"an" nicht geglaubt
+HID_GRACE_S = 8  # how long an "off" from the reconciliation is not believed after an HID "on"
 TRAY_WAIT_MS = 2000
 TRAY_WAIT_MAX_MS = 120_000
 SIDETONE_PRESETS = [(N_("sidetone.unchanged"), None), (N_("sidetone.off"), 0), (N_("sidetone.low"), 32), (N_("sidetone.medium"), 64), (N_("sidetone.high"), 96)]
 
 
 class FakeBattery(QObject):
-    """Testmodus: ersetzt headsetcontrol -b und den HID-Wächter durch einen künstlichen Stand."""
+    """Test mode: replaces headsetcontrol -b and the HID watcher with a fake battery level."""
 
     def __init__(self, status, drain_interval_s, drain, on_status, parent=None):
         super().__init__(parent)
@@ -66,16 +66,16 @@ class TrayApp(QObject):
     def __init__(self, config, fake=None):
         super().__init__()
         self.config = config
-        self.fake = fake  # (BatteryStatus, drain, drain_interval_s) oder None
+        self.fake = fake  # (BatteryStatus, drain, drain_interval_s) or None
         self.alerts = LowBatteryAlerts(config["warn_threshold"], config["critical_threshold"])
         self.full_detector = FullChargeDetector()
-        self.powered = None  # None = unbekannt
+        self.powered = None  # None = unknown
         self.level = None
         self.charging = False
-        self.level_before_charge = None  # beim Laden ist der gemeldete Prozentwert unzuverlässig
+        self.level_before_charge = None  # the reported percentage is unreliable while charging
         self.time_to_empty_min = None
-        self.problem = None  # Text, wenn headsetcontrol fehlt/scheitert oder der Dongle fehlt
-        self._hid_on_at = None  # Zeitpunkt des letzten "an" vom HID-Wächter
+        self.problem = None  # text if headsetcontrol is missing/fails or the dongle is missing
+        self._hid_on_at = None  # time of the last "on" from the HID watcher
 
         self.hc = Headsetcontrol(self)
         self._apply_device_ids()
@@ -101,7 +101,7 @@ class TrayApp(QObject):
         else:
             self.hid = HidWatcher(*self._device_ids(), parent=self)
             self.hid.power_changed.connect(lambda on: self.on_power(on, from_hid=True))
-            self.hid.charging_changed.connect(lambda _charging: self.poll())  # Stand sofort holen
+            self.hid.charging_changed.connect(lambda _charging: self.poll())  # fetch the level right away
             self.hid.start()
             self._poll = QTimer(self)
             self._poll.setInterval(config["poll_interval_s"] * 1000)
@@ -111,11 +111,11 @@ class TrayApp(QObject):
             self.hc.version(self._check_headsetcontrol_version)
             self._watch_config()
 
-    # ---- Menü -------------------------------------------------------------
+    # ---- Menu -------------------------------------------------------------
     def _build_menu(self):
         menu = QMenu()
-        # Plasma zeigt das Menü über DBusMenu: Widgets und Farben im Text gehen dort verloren,
-        # ein farbiger Punkt als Icon kommt an. Klick = Status neu abfragen.
+        # Plasma shows the menu via DBusMenu: widgets and colours in the text are lost there,
+        # a coloured dot as an icon gets through. Click = query the status again.
         self.status_action = menu.addAction(NAME, self._refresh_status)
         menu.addSeparator()
         self.light_action = self._checkable(menu, tr("menu.light"), self.config["light"], self._toggle_light)
@@ -124,7 +124,7 @@ class TrayApp(QObject):
         menu.addAction(tr("menu.settings"), self._open_settings)
         menu.addSeparator()
         menu.addAction(tr("menu.quit"), QApplication.quit)
-        self.menu = menu  # Referenz halten, das Tray besitzt das Menü nicht
+        self.menu = menu  # keep a reference, the tray does not own the menu
         self.tray.setContextMenu(menu)
 
     def _build_sidetone_menu(self, menu):
@@ -150,8 +150,8 @@ class TrayApp(QObject):
         return action
 
     def _toggle_light(self, on):
-        self.config.set("light", on)  # im Testmodus ist die Config schreibgeschützt
-        if self.powered is not False:  # ist das Headset aus, wird es beim Einschalten gesetzt
+        self.config.set("light", on)  # in test mode the config is read-only
+        if self.powered is not False:  # if the headset is off, it is set when it is switched on
             self.hc.set_light(on)
 
     def _set_sidetone(self, value):
@@ -182,7 +182,7 @@ class TrayApp(QObject):
         except OSError as err:
             log.warning("desktop entry: %s", err)
 
-    # ---- Konfiguration ----------------------------------------------------
+    # ---- Configuration ----------------------------------------------------
     def _device_ids(self):
         return int(self.config["usb_vendor_id"], 16), int(self.config["usb_product_id"], 16)
 
@@ -190,10 +190,10 @@ class TrayApp(QObject):
         self.hc.set_device(self.config["usb_vendor_id"], self.config["usb_product_id"])
 
     def _watch_config(self):
-        """Änderungen an der config.json (Editor, Einstellungsdialog) ohne Neustart übernehmen.
+        """Pick up changes to config.json (editor, settings dialog) without a restart.
 
-        Beobachtet Datei und Verzeichnis: Speichern per Umbenennen (die meisten Editoren, unser eigenes Speichern)
-        ändert nur das Verzeichnis, direktes Überschreiben nur die Datei.
+        Watches the file and the directory: saving by renaming (most editors, our own saving)
+        only changes the directory, overwriting in place only the file.
         """
         directory = self.config.path.parent
         if not directory.is_dir():
@@ -208,7 +208,7 @@ class TrayApp(QObject):
         self._watch_config_file()
 
     def _watch_config_file(self):
-        """Nach dem Ersetzen der Datei (Umbenennen) ist die alte Beobachtung weg: neu eintragen."""
+        """After the file has been replaced (renamed) the old watch is gone: register it again."""
         path = str(self.config.path)
         if self.config.path.exists() and path not in self._config_watcher.files():
             self._config_watcher.addPath(path)
@@ -221,7 +221,7 @@ class TrayApp(QObject):
             self.apply_config(old)
 
     def apply_config(self, old):
-        """Wendet geänderte Werte an; `old` ist der Stand davor."""
+        """Applies changed values; `old` is the state before."""
         cfg = self.config
         self.alerts.warn, self.alerts.critical = cfg["warn_threshold"], cfg["critical_threshold"]
         if cfg["language"] != old["language"]:
@@ -246,7 +246,7 @@ class TrayApp(QObject):
         self._refresh_ui()
 
     def _apply_language(self):
-        """Sprache wechseln: Menü neu aufbauen (die Texte stehen schon im Menü), Anzeige neu erzeugen."""
+        """Switch language: rebuild the menu (the texts are already in it), regenerate the display."""
         code = set_language(self.config["language"])
         log.info("Language: %s (setting: %s)", code, self.config["language"])
         self._build_menu()
@@ -258,7 +258,7 @@ class TrayApp(QObject):
         action.setChecked(checked)
         action.blockSignals(False)
 
-    # ---- Zustand ----------------------------------------------------------
+    # ---- State ------------------------------------------------------------
     def _refresh_status(self):
         if not self.fake:
             self.poll()
@@ -277,10 +277,10 @@ class TrayApp(QObject):
         if status is not None:
             self.on_battery(status)
         elif error == NO_DEVICE:
-            self.on_power(False)  # ohne Dongle ist das Headset nicht erreichbar
+            self.on_power(False)  # without the dongle the headset is not reachable
             self._refresh_ui()
         else:
-            self._refresh_ui()  # Zustand sonst unverändert lassen
+            self._refresh_ui()  # otherwise leave the state unchanged
 
     def _check_headsetcontrol_version(self, text):
         log.info("headsetcontrol: %s", text or "not found")
@@ -292,8 +292,8 @@ class TrayApp(QObject):
 
     def on_battery(self, status: BatteryStatus):
         if not status.powered and self._hid_on_recently():
-            # Direkt nach dem Einschalten antwortet headsetcontrol evtl. noch mit "nicht verfügbar":
-            # das Ergebnis verwerfen, aber bald erneut fragen (sonst fehlt der Stand bis zum nächsten Abgleich).
+            # Right after power-on headsetcontrol may still answer "not available":
+            # discard the result but ask again soon (otherwise the level is missing until the next reconciliation).
             log.debug("Query reports 'off' right after HID reported 'on': ignored, querying again in %d s", RETRY_POLL_MS // 1000)
             self._retry_poll.start(RETRY_POLL_MS)
             return
@@ -313,7 +313,7 @@ class TrayApp(QObject):
         if self.config["notifications"]:
             self._alert(self.alerts.update(self.level, self.charging))
         else:
-            self.alerts.update(self.level, self.charging)  # Schwellen trotzdem nachführen
+            self.alerts.update(self.level, self.charging)  # still keep the thresholds up to date
         if self.full_detector.update(time.monotonic(), status.voltage_mv, status.charging) \
                 and self.config["full_charge_notification"]:
             self.notifier.send(tr("notify.full.title").format(name=NAME), tr("notify.full.text"))
@@ -334,8 +334,8 @@ class TrayApp(QObject):
             self._relight.stop()
             self.charging = False
         elif not was_on and not self.fake:
-            # Das Headset braucht kurz, bis es Befehle annimmt (auch beim Programmstart mit eingeschaltetem
-            # Headset). Danach wird auch der Akkustand geholt.
+            # The headset needs a moment before it accepts commands (also when the program starts with the headset
+            # already on). After that the battery level is fetched as well.
             self._relight_tries = 0
             self._relight.start(self.config["relight_delay_ms"])
         self._refresh_ui()
@@ -352,7 +352,7 @@ class TrayApp(QObject):
         log.info("Setting light: %s", "ok" if ok else "failed")
         if not ok and self.powered and self._relight_tries < 2:
             self._relight_tries += 1
-            self._relight.start(self.config["relight_delay_ms"])  # Headset evtl. noch nicht bereit
+            self._relight.start(self.config["relight_delay_ms"])  # headset may not be ready yet
         elif self.powered:
             self.poll()
 
@@ -364,9 +364,9 @@ class TrayApp(QObject):
             self.notifier.send(tr("notify.low.title").format(name=NAME),
                                tr("notify.low.text").format(level=self.level))
 
-    # ---- Anzeige ----------------------------------------------------------
+    # ---- Display ----------------------------------------------------------
     def _refresh_ui(self):
-        extra = None  # Zusatzangabe; Plasma stellt im Tooltip keine Zeilenumbrüche dar, daher alles in einer Zeile
+        extra = None  # extra detail; Plasma does not show line breaks in the tooltip, so everything goes on one line
         if self.problem:
             main = f"{NAME}: {tr(self.problem)}"
         elif self.powered is False:
@@ -374,7 +374,7 @@ class TrayApp(QObject):
         elif self.powered is None:
             main = f"{NAME}: {tr('status.unknown')}"
         elif self.charging:
-            # Die Ladespannung verfälscht den Prozentwert (springt binnen Sekunden auf ~100 %).
+            # The charging voltage distorts the percentage (it jumps to ~100 % within seconds).
             main = f"{NAME}: {tr('status.charging')}"
             if self.level_before_charge is not None:
                 extra = tr("status.level_before_charge").format(level=self.level_before_charge)
@@ -405,7 +405,7 @@ def format_duration(minutes):
 
 
 def lock_path():
-    """Sperrdatei je Benutzer: ein gemeinsamer Pfad in /tmp würde andere Benutzer aussperren."""
+    """Per-user lock file: a shared path in /tmp would lock out other users."""
     base = os.environ.get("XDG_RUNTIME_DIR") or tempfile.gettempdir()
     return os.path.join(base, f"g733-tray-{os.getuid()}.lock")
 
@@ -466,21 +466,21 @@ def main(argv=None):
     app = QApplication(sys.argv[:1])
     app.setApplicationName("g733-tray")
     app.setQuitOnLastWindowClosed(False)
-    app.setDesktopFileName("g733-tray")  # ordnet Fenster dem Starter (und seinem Icon) in der Taskleiste zu
+    app.setDesktopFileName("g733-tray")  # assigns windows to the launcher (and its icon) in the task bar
     app.setWindowIcon(QIcon.fromTheme("audio-headset", battery_icon(None, False, True, 20, 10)))
     signal.signal(signal.SIGINT, lambda *_: app.quit())
-    keepalive = QTimer()  # lässt den Python-Signalhandler regelmäßig laufen
+    keepalive = QTimer()  # lets the Python signal handler run regularly
     keepalive.start(500)
     keepalive.timeout.connect(lambda: None)
 
     lock = None
-    if not args.test_mode:  # Testläufe dürfen neben der echten Instanz laufen
+    if not args.test_mode:  # test runs may run alongside the real instance
         lock = QLockFile(lock_path())
         if not lock.tryLock(0):
             print("g733-tray is already running")
             return 1
 
-    logsetup.setup(verbose=args.verbose, test_mode=args.test_mode)  # erst nach dem Lock: leert die Logdatei
+    logsetup.setup(verbose=args.verbose, test_mode=args.test_mode)  # only after the lock: clears the log file
     log.info("g733-tray %s starting (test mode: %s)", __version__, args.test_mode)
     log.info("Install type: %s | Python %s | Qt %s | PyQt %s | Style: %s", install_kind(),
              sys.version.split()[0], QT_VERSION_STR, PYQT_VERSION_STR, app.style().name())
@@ -488,7 +488,7 @@ def main(argv=None):
     language = set_language(config["language"])
     log.info("Language: %s (setting: %s)", language, config["language"])
     fake = (fake_status(args), args.simulate_drain, args.drain_interval) if args.test_mode else None
-    holder = []  # hält Qt-Objekte am Leben
+    holder = []  # keeps Qt objects alive
 
     def start():
         holder.append(TrayApp(config, fake))
@@ -496,7 +496,7 @@ def main(argv=None):
     if QSystemTrayIcon.isSystemTrayAvailable():
         start()
     else:
-        # Beim Login ist das Panel oft noch nicht bereit: regelmäßig erneut prüfen.
+        # The panel is often not ready yet at login: check again regularly.
         log.warning("No system tray available, waiting for it ...")
         waiter = QTimer()
         tries = [0]

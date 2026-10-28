@@ -24,8 +24,8 @@ class Catalogs(unittest.TestCase):
         used = source_strings()
         for code in i18n.LANGUAGES:
             keys = set(catalog(code))
-            self.assertEqual(sorted(used - keys), [], f"{code}: fehlende Übersetzungen")
-            self.assertEqual(sorted(keys - used), [], f"{code}: nicht benutzte Einträge")
+            self.assertEqual(sorted(used - keys), [], f"{code}: missing translations")
+            self.assertEqual(sorted(keys - used), [], f"{code}: unused entries")
 
     def test_ids_have_the_expected_form(self):
         for text_id in source_strings():
@@ -36,20 +36,20 @@ class Catalogs(unittest.TestCase):
         for code in i18n.LANGUAGES:
             for text_id, text in catalog(code).items():
                 self.assertEqual(sorted(PLACEHOLDER.findall(reference[text_id])), sorted(PLACEHOLDER.findall(text)),
-                                 f"{code}: Platzhalter in {text_id}")
+                                 f"{code}: placeholders in {text_id}")
                 self.assertEqual(sorted(HTML_TAG.findall(reference[text_id])), sorted(HTML_TAG.findall(text)),
-                                 f"{code}: HTML-Tags in {text_id}")
-                self.assertTrue(text.strip(), f"{code}: leere Übersetzung für {text_id}")
+                                 f"{code}: HTML tags in {text_id}")
+                self.assertTrue(text.strip(), f"{code}: empty translation for {text_id}")
 
     def test_translations_format_with_their_placeholders(self):
         values = dict(version="4.2.0", installed="3.0.0", wanted="4.2.0", error="x", level=5, duration="1 h",
                       hours=2, minutes=3, name="G733", ids="046d:0ab5")
         for code in i18n.LANGUAGES:
             for text in catalog(code).values():
-                text.format(**values)  # darf nicht werfen
+                text.format(**values)  # must not raise
 
     def test_non_literal_calls_are_known(self):
-        # tr(label) / tr(self.problem) / tr(install_kind()): die IDs stehen über N_() im Katalog
+        # tr(label) / tr(self.problem) / tr(install_kind()): the IDs are in the catalog via N_()
         self.assertEqual(sorted(call.split(": ", 1)[1] for call in non_literal_calls()),
                          ["tr(install_kind())", "tr(label)", "tr(self.problem)"])
 
@@ -63,7 +63,7 @@ class Switching(unittest.TestCase):
         self.assertEqual(i18n.tr("menu.quit"), "Beenden")
         self.assertEqual(i18n.set_language("en"), "en")
         self.assertEqual(i18n.tr("menu.quit"), "Quit")
-        self.assertEqual(i18n.set_language("xx"), "en")  # unbekannt -> Englisch
+        self.assertEqual(i18n.set_language("xx"), "en")  # unknown -> English
 
     def test_missing_id_falls_back_to_english_then_to_the_id(self):
         i18n.set_language("de")

@@ -1,4 +1,4 @@
-# Baut bei einem Tag "vX.Y.Z" das .deb und das .rpm und hängt sie an ein GitHub-Release.
+# On a tag "vX.Y.Z", builds the .deb and the .rpm and attaches them to a GitHub release.
 name: release
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   version:
-    # Bricht ab, wenn der Tag nicht zur Version im Code, in der .spec und im PKGBUILD passt.
+    # Aborts if the tag does not match the version in the code, the .spec and the PKGBUILD.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -21,7 +21,7 @@ jobs:
           fail=0
           for entry in "g733_tray/__init__.py=$code" "packaging/g733-tray.spec=$spec" "packaging/arch/PKGBUILD=$pkgbuild"; do
             if [ "${entry#*=}" != "$tag" ]; then
-              echo "::error::${entry%%=*} hat Version '${entry#*=}', der Tag ist '$tag'"
+              echo "::error::${entry%%=*} has version '${entry#*=}', the tag is '$tag'"
               fail=1
             fi
           done

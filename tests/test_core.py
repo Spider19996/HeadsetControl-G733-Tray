@@ -67,10 +67,10 @@ class FullCharge(unittest.TestCase):
 
     def test_plateau_reports_once(self):
         d = FullChargeDetector(window_s=600, max_rise_mv=5, min_mv=4100)
-        samples = [(t, 4150 + t // 300) for t in range(0, 1300, 60)]  # +1 mV je 5 min
+        samples = [(t, 4150 + t // 300) for t in range(0, 1300, 60)]  # +1 mV per 5 min
         results = self.feed(d, samples)
         self.assertEqual(results.count(True), 1)
-        self.assertTrue(results.index(True) >= 9)  # erst nach annähernd vollem Fenster
+        self.assertTrue(results.index(True) >= 9)  # only after a nearly full window
 
     def test_rising_voltage_is_not_full(self):
         d = FullChargeDetector()
@@ -84,7 +84,7 @@ class FullCharge(unittest.TestCase):
         d = FullChargeDetector()
         self.feed(d, [(t, 4150) for t in range(0, 700, 60)])
         self.assertFalse(d.update(700, 4150, False))
-        self.assertFalse(d.update(760, 4150, True))  # neuer Ladevorgang, Fenster leer
+        self.assertFalse(d.update(760, 4150, True))  # new charge, window empty
 
 
 class AboutTest(unittest.TestCase):
@@ -97,7 +97,7 @@ class AboutTest(unittest.TestCase):
         user = "/home/x/.local/share/g733-tray/venv/lib/python3.14/site-packages/g733_tray"
         self.assertEqual(install_kind(user, user_venv=Path("/home/x/.local/share/g733-tray/venv")),
                          "install.user")
-        custom = "/data/g733-tray/venv/lib/python3.14/site-packages/g733_tray"  # abweichendes XDG_DATA_HOME
+        custom = "/data/g733-tray/venv/lib/python3.14/site-packages/g733_tray"  # different XDG_DATA_HOME
         self.assertEqual(install_kind(custom, user_venv=Path("/data/g733-tray/venv")),
                          "install.user")
         system = "/usr/lib/python3/dist-packages/g733_tray"
@@ -114,7 +114,7 @@ class AboutTest(unittest.TestCase):
         self.assertTrue(headsetcontrol_too_old("HeadsetControl 3.1.0"))
         self.assertFalse(headsetcontrol_too_old("HeadsetControl 4.2.0"))
         self.assertFalse(headsetcontrol_too_old("HeadsetControl 4.10.1"))
-        self.assertFalse(headsetcontrol_too_old(None))  # unbekannt: nicht warnen
+        self.assertFalse(headsetcontrol_too_old(None))  # unknown: do not warn
 
     def test_duration(self):
         self.assertEqual(format_duration(459), "7 h 39 min")
@@ -174,7 +174,7 @@ class ConfigTest(unittest.TestCase):
             path = Path(d) / "c.json"
             path.write_text(json.dumps({"warn_threshold": 5, "critical_threshold": 15, "foo": 1}))
             c = Config(path)
-            self.assertEqual((c["critical_threshold"], c["warn_threshold"]), (5, 15))  # sortiert
+            self.assertEqual((c["critical_threshold"], c["warn_threshold"]), (5, 15))  # sorted
             c.set("light", False)
             self.assertEqual(json.loads(path.read_text())["foo"], 1)
 
@@ -188,7 +188,7 @@ class ConfigTest(unittest.TestCase):
             self.assertEqual((c["sidetone"], c["warn_threshold"]), (128, 33))
             path.write_text("{kaputt")
             self.assertFalse(c.reload())
-            self.assertEqual(c["warn_threshold"], 33)  # bisheriger Stand bleibt
+            self.assertEqual(c["warn_threshold"], 33)  # the previous state is kept
 
     def test_usb_ids_normalized(self):
         from g733_tray.config import normalize_usb_id

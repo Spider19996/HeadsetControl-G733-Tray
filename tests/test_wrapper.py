@@ -42,12 +42,12 @@ class WrapperReentrancy(unittest.TestCase):
         loop.exec()
 
     def test_callback_may_start_next_command(self):
-        """Der Abgleich nach dem Setzen des Lichts (im Callback gestartet) darf nicht verloren gehen."""
+        """The reconciliation after setting the light (started in the callback) must not get lost."""
         hc = headsetcontrol.Headsetcontrol()
         results = []
         hc.set_light(True, lambda ok: hc.battery(lambda status, error: results.append((status, error))))
         self.run_until(lambda: results)
-        self.assertEqual(len(results), 1, "Ergebnis des im Callback gestarteten Aufrufs fehlt")
+        self.assertEqual(len(results), 1, "result of the call started in the callback is missing")
         status, error = results[0]
         self.assertIsNone(error)
         self.assertEqual(status.level, 66)

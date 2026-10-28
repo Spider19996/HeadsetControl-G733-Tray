@@ -1,18 +1,18 @@
-"""Übersetzungen. Im Code steht an jeder Textstelle eine Text-ID: tr("menu.quit") liefert den Text in der gewählten Sprache.
+"""Translations. Every text in the code is a text ID: tr("menu.quit") returns the text in the selected language.
 
-Jede Sprache (auch Deutsch) ist ein Modul g733_tray/lang/<code>.py mit dem Wörterbuch STRINGS (Schlüssel = Text-ID).
-Fehlt eine ID in der gewählten Sprache, wird der englische Text angezeigt, fehlt sie auch dort, die ID selbst.
-N_("id") markiert eine ID nur zum Übersetzen (wird erst bei der Anzeige mit tr() übersetzt), z. B. für Konstanten.
+Each language (German too) is a module g733_tray/lang/<code>.py with the dictionary STRINGS (key = text ID).
+If an ID is missing in the selected language, the English text is shown; if it is missing there too, the ID itself.
+N_("id") marks an ID for translation only (it is translated with tr() when displayed), e.g. for constants.
 """
 import importlib
 import logging
 
 log = logging.getLogger("g733.i18n")
 
-FALLBACK_LANGUAGE = "en"  # Ersatz für fehlende Einträge und wenn die Systemsprache nicht angeboten wird
+FALLBACK_LANGUAGE = "en"  # replacement for missing entries and when the system language is not offered
 AUTO = "auto"
 
-# Sprachcode -> Eigenname (wird in der Auswahl in der jeweiligen Sprache angezeigt)
+# language code -> native name (shown in the selection, each in its own language)
 LANGUAGES = {
     "de": "Deutsch",
     "en": "English",
@@ -34,7 +34,7 @@ _current = FALLBACK_LANGUAGE
 
 
 def N_(text_id):
-    """Markiert eine Text-ID zum Übersetzen, ohne sie jetzt zu übersetzen."""
+    """Marks a text ID for translation without translating it now."""
     return text_id
 
 
@@ -50,7 +50,7 @@ def current_language():
 
 
 def system_language():
-    """Sprachcode der Systemsprache, sonst Englisch."""
+    """Language code of the system language, otherwise English."""
     from PyQt6.QtCore import QLocale
     for tag in QLocale.system().uiLanguages():
         code = tag.replace("_", "-").split("-")[0].lower()
@@ -60,7 +60,7 @@ def system_language():
 
 
 def resolve(setting):
-    """"auto" -> Systemsprache; unbekannte Codes -> Englisch."""
+    """"auto" -> system language; unknown codes -> English."""
     if setting == AUTO:
         return system_language()
     return setting if setting in LANGUAGES else FALLBACK_LANGUAGE
@@ -71,7 +71,7 @@ def _load(code):
 
 
 def set_language(setting):
-    """Stellt die Sprache ein (Code oder "auto") und gibt den tatsächlich verwendeten Code zurück."""
+    """Sets the language (code or "auto") and returns the code actually used."""
     global _catalog, _fallback, _current
     code = resolve(setting)
     fallback = _load(FALLBACK_LANGUAGE)
@@ -84,4 +84,4 @@ def set_language(setting):
     return code
 
 
-set_language(FALLBACK_LANGUAGE)  # bis das Programm die Sprache wählt
+set_language(FALLBACK_LANGUAGE)  # until the program selects the language

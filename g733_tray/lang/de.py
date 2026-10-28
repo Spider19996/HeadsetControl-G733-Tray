@@ -1,4 +1,4 @@
-"""Deutsch (de). Schlüssel = Text-ID (siehe tr()-Aufrufe im Code), Wert = Übersetzung.
+"""Deutsch (de). Key = text ID (see the tr() calls in the code), value = text.
 """
 
 STRINGS = {
