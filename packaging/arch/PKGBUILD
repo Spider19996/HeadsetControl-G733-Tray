@@ -1,6 +1,6 @@
 # Maintainer: Spider19996 <spider19996@users.noreply.github.com>
 pkgname=g733-tray
-pkgver=1.0.2
+pkgver=1.0.3
 pkgrel=1
 pkgdesc='Tray application for the Logitech G733 (battery level, light) for KDE Plasma'
 arch=('any')

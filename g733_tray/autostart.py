@@ -52,6 +52,7 @@ def _entry(extra=""):
         + (f"Path={workdir}\n" if workdir else "")
         + "Icon=audio-headset\n"
         "Terminal=false\n"
+        "StartupNotify=false\n"
         + extra
     )
 

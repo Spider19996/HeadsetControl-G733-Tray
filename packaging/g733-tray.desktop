@@ -16,6 +16,7 @@ Comment[ja]=Logitech G733 のバッテリー残量とライト
 Exec=/usr/bin/g733-tray
 Icon=audio-headset
 Terminal=false
+StartupNotify=false
 Categories=AudioVideo;Audio;
 Keywords=Headset;G733;Logitech;Battery;
 Keywords[de]=Headset;G733;Logitech;Akku;Batterie;

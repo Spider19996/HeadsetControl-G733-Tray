@@ -1,6 +1,6 @@
 # RPM for Fedora and openSUSE. Build with packaging/build-rpm.sh
 Name:           g733-tray
-Version:        1.0.2
+Version:        1.0.3
 Release:        1%{?dist}
 Summary:        Tray application for the Logitech G733 (battery level, light)
 # Translations of Summary and description (AI-generated, not reviewed by native speakers)
@@ -108,6 +108,9 @@ udevadm control --reload-rules >/dev/null 2>&1 || :
 %{_prefix}/lib/udev/rules.d/70-g733-tray.rules
 
 %changelog
+* Wed Oct 28 2026 Spider19996 <spider19996@users.noreply.github.com> - 1.0.3-1
+- Launcher: StartupNotify=false (no busy cursor while the tray program starts)
+
 * Wed Oct 28 2026 Spider19996 <spider19996@users.noreply.github.com> - 1.0.2-1
 - Translations use text IDs instead of German source strings
 - Code comments translated to English
