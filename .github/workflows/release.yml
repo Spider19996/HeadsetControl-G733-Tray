@@ -1,0 +1,58 @@
+# Baut bei einem Tag "vX.Y.Z" das .deb und das .rpm und hängt sie an ein GitHub-Release.
+name: release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    # Bricht ab, wenn der Tag nicht zur Version im Code, in der .spec und im PKGBUILD passt.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          tag="${GITHUB_REF_NAME#v}"
+          code=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' g733_tray/__init__.py)
+          spec=$(sed -n 's/^Version:[[:space:]]*//p' packaging/g733-tray.spec)
+          pkgbuild=$(sed -n 's/^pkgver=//p' packaging/arch/PKGBUILD)
+          fail=0
+          for entry in "g733_tray/__init__.py=$code" "packaging/g733-tray.spec=$spec" "packaging/arch/PKGBUILD=$pkgbuild"; do
+            if [ "${entry#*=}" != "$tag" ]; then
+              echo "::error::${entry%%=*} hat Version '${entry#*=}', der Tag ist '$tag'"
+              fail=1
+            fi
+          done
+          exit $fail
+
+  deb:
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./packaging/build-deb.sh
+      - uses: actions/upload-artifact@v4
+        with: {name: deb, path: dist/*.deb}
+
+  rpm:
+    needs: version
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - run: dnf install -y rpm-build python3-devel desktop-file-utils tar gzip
+      - uses: actions/checkout@v4
+      - run: ./packaging/build-rpm.sh
+      - uses: actions/upload-artifact@v4
+        with: {name: rpm, path: dist/*.rpm}
+
+  release:
+    needs: [deb, rpm]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: dist, merge-multiple: true}
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --generate-notes

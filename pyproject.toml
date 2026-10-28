@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "g733-tray"
+dynamic = ["version"]
+description = "KDE-Plasma-Tray für das Logitech G733: Akkustand, Licht, Benachrichtigungen"
+readme = "README.md"
+requires-python = ">=3.9"  # nur mit Python 3.14 getestet
+license = {text = "MIT"}
+authors = [{name = "Spider19996"}]
+# PyQt6 kommt aus dem Systempaket (python3-pyqt6), nicht aus pip: nur dessen Qt kennt den Plasma-Stil
+dependencies = []
+
+[project.scripts]
+g733-tray = "g733_tray.app:run"
+
+[tool.setuptools]
+packages = ["g733_tray", "g733_tray.lang"]
+
+[tool.setuptools.dynamic]
+version = {attr = "g733_tray.__version__"}

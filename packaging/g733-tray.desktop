@@ -1,0 +1,20 @@
+[Desktop Entry]
+Type=Application
+Name=G733 Tray
+Comment=Battery level and light control for the Logitech G733
+Comment[de]=Akkustand und Licht des Logitech G733
+Comment[es]=Nivel de batería y luz del Logitech G733
+Comment[fr]=Niveau de batterie et éclairage du Logitech G733
+Comment[it]=Livello della batteria e luce del Logitech G733
+Comment[pt]=Nível da bateria e luz do Logitech G733
+Comment[nl]=Accustand en verlichting van de Logitech G733
+Comment[pl]=Poziom baterii i podświetlenie Logitech G733
+Comment[ru]=Заряд и подсветка Logitech G733
+Comment[tr]=Logitech G733 pil seviyesi ve ışık denetimi
+Comment[zh_CN]=Logitech G733 的电量与灯光
+Comment[ja]=Logitech G733 のバッテリー残量とライト
+Exec=/usr/bin/g733-tray
+Icon=audio-headset
+Terminal=false
+Categories=AudioVideo;Audio;
+Keywords=Headset;G733;Logitech;Akku;

@@ -1,0 +1,18 @@
+# Führt bei jedem Push (auf Branches) und bei jedem Pull Request die Tests aus.
+name: tests
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    container: fedora:latest  # aktuelles Python und PyQt6 aus der Distribution, wie beim Programm selbst
+    steps:
+      - run: dnf install -y python3-pyqt6
+      - uses: actions/checkout@v4
+      - run: python3 --version
+      - run: python3 -m unittest discover -s tests -t .
+        env:
+          QT_QPA_PLATFORM: offscreen

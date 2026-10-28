@@ -1,0 +1,27 @@
+# Maintainer: Spider19996 <spider19996@users.noreply.github.com>
+pkgname=g733-tray
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Tray-Programm für das Logitech G733 (Akkustand, Licht) für KDE Plasma'
+arch=('any')
+url='https://github.com/Spider19996/HeadsetControl-G733-Tray'
+license=('MIT')
+depends=('python' 'python-pyqt6')
+makedepends=('python-build' 'python-installer' 'python-setuptools')
+optdepends=('headsetcontrol: wird zur Laufzeit benötigt (4.2.0 oder neuer)'
+            'libnotify: notify-send für Benachrichtigungen mit Dringlichkeit')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')  # nach dem ersten Release durch updpkgsums ersetzen
+
+build() {
+    cd "HeadsetControl-G733-Tray-$pkgver"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "HeadsetControl-G733-Tray-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 packaging/g733-tray.desktop "$pkgdir/usr/share/applications/g733-tray.desktop"
+    install -Dm644 udev/70-g733-tray.rules "$pkgdir/usr/lib/udev/rules.d/70-g733-tray.rules"
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
