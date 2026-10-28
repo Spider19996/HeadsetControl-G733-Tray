@@ -16,9 +16,9 @@ MIN_HEADSETCONTROL = (4, 2, 0)  # ältere Versionen kennen das G733 bzw. die JSO
 
 # Paketverwaltungen, die sich "wem gehört diese Datei?" fragen lassen
 PACKAGE_MANAGERS = (
-    ("dpkg", ["dpkg", "-S"], N_("Debian-Paket (.deb)")),
-    ("rpm", ["rpm", "-qf"], N_("RPM-Paket")),
-    ("pacman", ["pacman", "-Qo"], N_("Arch-Paket")),
+    ("dpkg", ["dpkg", "-S"], N_("install.deb")),
+    ("rpm", ["rpm", "-qf"], N_("install.rpm")),
+    ("pacman", ["pacman", "-Qo"], N_("install.arch")),
 )
 
 
@@ -34,15 +34,15 @@ def install_kind(module_dir=None, owned_by_package=_owned_by_package, which=shut
     """Beschreibt, wie das Programm installiert wurde (aus dem Ort des Pakets abgeleitet)."""
     here = Path(module_dir or Path(__file__).resolve().parent)
     if (here.parent / "pyproject.toml").exists():
-        return N_("Quellbaum (Entwicklung)")
+        return N_("install.source_tree")
     if here.is_relative_to(user_venv):
-        return N_("install.sh (Benutzer-Installation)")
+        return N_("install.user")
     for binary, command, label in PACKAGE_MANAGERS:
         if which(binary) and owned_by_package(command, str(here / "__init__.py")):
             return label
     if str(here).startswith("/usr/"):
-        return N_("Systeminstallation")
-    return "pip"
+        return N_("install.system")
+    return N_("install.pip")
 
 
 def parse_version(text):

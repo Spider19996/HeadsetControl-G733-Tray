@@ -137,9 +137,9 @@ g733-tray --fake-battery 25 --simulate-drain --drain-interval 1   # fällt 1 % p
 
 ## Übersetzungen
 
-Jede Sprache ist eine Datei `g733_tray/lang/<code>.py` mit einem Wörterbuch (Schlüssel = deutscher Originaltext). Die Übersetzungen wurden von einer KI erstellt und sind nicht von Muttersprachlern geprüft, Korrekturen sind willkommen.
+Jeder Text im Code ist eine kurze ID, z. B. `tr("menu.quit")`. Jede Sprache, auch Deutsch und Englisch, ist eine Datei `g733_tray/lang/<code>.py` mit einem Wörterbuch von ID zu Text. Fehlt ein Eintrag, wird der englische Text angezeigt. Bis auf Deutsch wurden die Übersetzungen von einer KI erstellt und sind nicht von Muttersprachlern geprüft, Korrekturen sind willkommen.
 
-Eine neue Sprache anlegen: Datei kopieren und übersetzen, den Code in `LANGUAGES` in `g733_tray/i18n.py` eintragen. Neue Texte im Code schreibt man als `tr("deutscher Text")`. Der Test `tests/test_i18n.py` prüft für jede Sprache, dass alle Texte vorhanden sind und die Platzhalter (z. B. `{level}`) stimmen.
+Eine neue Sprache anlegen: `en.py` kopieren und die Werte übersetzen (IDs und `{Platzhalter}` bleiben), den Code in `LANGUAGES` in `g733_tray/i18n.py` eintragen. Einen neuen Text anlegen: im Code `tr("bereich.name")` schreiben und die ID in jede Sprachdatei eintragen. Der Test `tests/test_i18n.py` prüft für jede Sprache, dass alle IDs vorhanden sind, keine unbenutzten übrig bleiben und die Platzhalter (z. B. `{level}`) stimmen.
 
 Die Logdatei und die Ausgabe von `--help` sind immer englisch, damit Fehlerberichte für alle lesbar sind.
 

@@ -1,1 +1,1 @@
-"""Sprachdateien: je Sprache ein Modul mit dem Wörterbuch STRINGS (Schlüssel = deutscher Originaltext)."""
+"""Sprachdateien: je Sprache ein Modul mit dem Wörterbuch STRINGS (Schlüssel = Text-ID, Wert = Text)."""

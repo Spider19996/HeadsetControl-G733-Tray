@@ -93,21 +93,21 @@ class AboutTest(unittest.TestCase):
             tree = Path(d) / "repo"
             (tree / "g733_tray").mkdir(parents=True)
             (tree / "pyproject.toml").write_text("")
-            self.assertEqual(install_kind(tree / "g733_tray"), "Quellbaum (Entwicklung)")
+            self.assertEqual(install_kind(tree / "g733_tray"), "install.source_tree")
         user = "/home/x/.local/share/g733-tray/venv/lib/python3.14/site-packages/g733_tray"
         self.assertEqual(install_kind(user, user_venv=Path("/home/x/.local/share/g733-tray/venv")),
-                         "install.sh (Benutzer-Installation)")
+                         "install.user")
         custom = "/data/g733-tray/venv/lib/python3.14/site-packages/g733_tray"  # abweichendes XDG_DATA_HOME
         self.assertEqual(install_kind(custom, user_venv=Path("/data/g733-tray/venv")),
-                         "install.sh (Benutzer-Installation)")
+                         "install.user")
         system = "/usr/lib/python3/dist-packages/g733_tray"
         deb = install_kind(system, lambda cmd, path: cmd[0] == "dpkg", lambda b: b)
-        self.assertEqual(deb, "Debian-Paket (.deb)")
+        self.assertEqual(deb, "install.deb")
         rpm = install_kind(system, lambda cmd, path: cmd[0] == "rpm", lambda b: b)
-        self.assertEqual(rpm, "RPM-Paket")
-        self.assertEqual(install_kind(system, lambda *_: False, lambda b: None), "Systeminstallation")
+        self.assertEqual(rpm, "install.rpm")
+        self.assertEqual(install_kind(system, lambda *_: False, lambda b: None), "install.system")
         self.assertEqual(install_kind("/opt/venv/lib/python3.12/site-packages/g733_tray",
-                                      lambda *_: False, lambda b: None), "pip")
+                                      lambda *_: False, lambda b: None), "install.pip")
 
     def test_headsetcontrol_version_check(self):
         self.assertEqual(parse_version("HeadsetControl 4.2.0"), (4, 2, 0))

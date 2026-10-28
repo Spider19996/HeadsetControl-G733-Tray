@@ -36,7 +36,7 @@ def parse_devices(output):
         if vendor is None or product is None:
             continue
         name = " ".join(part for part in (entry.get("vendor"), entry.get("product")) if part) \
-            or entry.get("device") or tr("Unbekanntes Gerät")
+            or entry.get("device") or tr("device.unknown")
         device = Device(name, vendor, product)
         if device not in devices:
             devices.append(device)

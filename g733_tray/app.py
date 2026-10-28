@@ -25,15 +25,15 @@ from .settings import SettingsDialog
 NAME = "G733"
 log = logging.getLogger("g733.app")
 PROBLEMS = {  # Anzeige per tr(PROBLEMS[...])
-    MISSING: N_("headsetcontrol nicht gefunden"),
-    NO_DEVICE: N_("Dongle nicht gefunden"),
-    FAILED: N_("headsetcontrol-Fehler (siehe Logdatei)"),
+    MISSING: N_("problem.missing"),
+    NO_DEVICE: N_("problem.no_device"),
+    FAILED: N_("problem.failed"),
 }
 RETRY_POLL_MS = 3000
 HID_GRACE_S = 8  # so lange wird ein "aus" vom Abgleich nach einem HID-"an" nicht geglaubt
 TRAY_WAIT_MS = 2000
 TRAY_WAIT_MAX_MS = 120_000
-SIDETONE_PRESETS = [(N_("Unverändert"), None), (N_("Aus"), 0), (N_("Niedrig"), 32), (N_("Mittel"), 64), (N_("Hoch"), 96)]
+SIDETONE_PRESETS = [(N_("sidetone.unchanged"), None), (N_("sidetone.off"), 0), (N_("sidetone.low"), 32), (N_("sidetone.medium"), 64), (N_("sidetone.high"), 96)]
 
 
 class FakeBattery(QObject):
@@ -118,17 +118,17 @@ class TrayApp(QObject):
         # ein farbiger Punkt als Icon kommt an. Klick = Status neu abfragen.
         self.status_action = menu.addAction(NAME, self._refresh_status)
         menu.addSeparator()
-        self.light_action = self._checkable(menu, tr("Licht an"), self.config["light"], self._toggle_light)
+        self.light_action = self._checkable(menu, tr("menu.light"), self.config["light"], self._toggle_light)
         self._build_sidetone_menu(menu)
         menu.addSeparator()
-        menu.addAction(tr("Einstellungen …"), self._open_settings)
+        menu.addAction(tr("menu.settings"), self._open_settings)
         menu.addSeparator()
-        menu.addAction(tr("Beenden"), QApplication.quit)
+        menu.addAction(tr("menu.quit"), QApplication.quit)
         self.menu = menu  # Referenz halten, das Tray besitzt das Menü nicht
         self.tray.setContextMenu(menu)
 
     def _build_sidetone_menu(self, menu):
-        sub = menu.addMenu(tr("Sidetone (Mikrofon-Rückhörung)"))
+        sub = menu.addMenu(tr("menu.sidetone"))
         self.sidetone_group = QActionGroup(sub)
         self.sidetone_group.setExclusive(True)
         for label, value in SIDETONE_PRESETS:
@@ -287,10 +287,8 @@ class TrayApp(QObject):
         if headsetcontrol_too_old(text):
             wanted = ".".join(map(str, MIN_HEADSETCONTROL))
             log.warning("headsetcontrol too old (%s), at least %s is required", text, wanted)
-            self.notifier.send(tr("{name}: headsetcontrol zu alt").format(name=NAME),
-                               tr("Installiert: {installed}. Benötigt wird mindestens {wanted}, "
-                                  "sonst fehlen Funktionen oder die Anzeige ist falsch.").format(
-                                      installed=text, wanted=wanted))
+            self.notifier.send(tr("notify.too_old.title").format(name=NAME),
+                               tr("notify.too_old.text").format(installed=text, wanted=wanted))
 
     def on_battery(self, status: BatteryStatus):
         if not status.powered and self._hid_on_recently():
@@ -318,7 +316,7 @@ class TrayApp(QObject):
             self.alerts.update(self.level, self.charging)  # Schwellen trotzdem nachführen
         if self.full_detector.update(time.monotonic(), status.voltage_mv, status.charging) \
                 and self.config["full_charge_notification"]:
-            self.notifier.send(tr("{name}: Akku voll").format(name=NAME), tr("Der Akku ist voll geladen."))
+            self.notifier.send(tr("notify.full.title").format(name=NAME), tr("notify.full.text"))
         self._refresh_ui()
 
     def _hid_on_recently(self):
@@ -360,11 +358,11 @@ class TrayApp(QObject):
 
     def _alert(self, kind):
         if kind == CRITICAL:
-            self.notifier.send(tr("{name}: Akku kritisch").format(name=NAME),
-                               tr("Nur noch {level} % - bitte sofort laden.").format(level=self.level), critical=True)
+            self.notifier.send(tr("notify.critical.title").format(name=NAME),
+                               tr("notify.critical.text").format(level=self.level), critical=True)
         elif kind == WARNING:
-            self.notifier.send(tr("{name}: Akku niedrig").format(name=NAME),
-                               tr("Noch {level} % Akku.").format(level=self.level))
+            self.notifier.send(tr("notify.low.title").format(name=NAME),
+                               tr("notify.low.text").format(level=self.level))
 
     # ---- Anzeige ----------------------------------------------------------
     def _refresh_ui(self):
@@ -372,23 +370,23 @@ class TrayApp(QObject):
         if self.problem:
             main = f"{NAME}: {tr(self.problem)}"
         elif self.powered is False:
-            main = f"{NAME}: {tr('ausgeschaltet')}"
+            main = f"{NAME}: {tr('status.off')}"
         elif self.powered is None:
-            main = f"{NAME}: {tr('Status wird ermittelt …')}"
+            main = f"{NAME}: {tr('status.unknown')}"
         elif self.charging:
             # Die Ladespannung verfälscht den Prozentwert (springt binnen Sekunden auf ~100 %).
-            main = f"{NAME}: {tr('lädt (Prozentwert beim Laden ungenau)')}"
+            main = f"{NAME}: {tr('status.charging')}"
             if self.level_before_charge is not None:
-                extra = tr("Vor dem Laden: {level} %").format(level=self.level_before_charge)
+                extra = tr("status.level_before_charge").format(level=self.level_before_charge)
         else:
             main = f"{NAME}: {'?' if self.level is None else f'{self.level} %'}"
             if self.time_to_empty_min:
-                extra = tr("noch ca. {duration}").format(duration=format_duration(self.time_to_empty_min))
+                extra = tr("status.time_left").format(duration=format_duration(self.time_to_empty_min))
         warn, critical = self.config["warn_threshold"], self.config["critical_threshold"]
         color = status_color(self.level, self.charging, None if self.problem else self.powered, warn, critical)
         charging_menu = self.powered and self.charging and not self.problem
         if charging_menu:
-            menu_text = f"{NAME}: {tr('lädt')}"
+            menu_text = f"{NAME}: {tr('status.charging_short')}"
         else:
             menu_text = f"{main} ({extra})" if extra else main
         self.status_action.setText(menu_text)
@@ -402,8 +400,8 @@ def format_duration(minutes):
     """459 -> "7 h 39 min", 45 -> "45 min"."""
     hours, rest = divmod(int(minutes), 60)
     if hours:
-        return tr("{hours} h {minutes:02d} min").format(hours=hours, minutes=rest)
-    return tr("{minutes} min").format(minutes=rest)
+        return tr("time.hours_minutes").format(hours=hours, minutes=rest)
+    return tr("time.minutes").format(minutes=rest)
 
 
 def lock_path():
