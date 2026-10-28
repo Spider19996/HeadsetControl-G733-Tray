@@ -11,7 +11,7 @@ jobs:
     container: fedora:latest  # aktuelles Python und PyQt6 aus der Distribution, wie beim Programm selbst
     steps:
       - run: dnf install -y python3-pyqt6
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: python3 --version
       - run: python3 -m unittest discover -s tests -t .
         env:

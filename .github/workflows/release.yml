@@ -12,7 +12,7 @@ jobs:
     # Bricht ab, wenn der Tag nicht zur Version im Code, in der .spec und im PKGBUILD passt.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: |
           tag="${GITHUB_REF_NAME#v}"
           code=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' g733_tray/__init__.py)
@@ -31,9 +31,9 @@ jobs:
     needs: version
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: ./packaging/build-deb.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: {name: deb, path: dist/*.deb}
 
   rpm:
@@ -42,16 +42,16 @@ jobs:
     container: fedora:latest
     steps:
       - run: dnf install -y rpm-build python3-devel desktop-file-utils tar gzip
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: ./packaging/build-rpm.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: {name: rpm, path: dist/*.rpm}
 
   release:
     needs: [deb, rpm]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with: {path: dist, merge-multiple: true}
       - env:
           GH_TOKEN: ${{ github.token }}
