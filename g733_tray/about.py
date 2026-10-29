@@ -7,8 +7,6 @@ from pathlib import Path
 from .autostart import DATA_HOME
 from .i18n import N_
 
-from . import __version__
-
 USER_VENV = DATA_HOME / "g733-tray" / "venv"  # install.sh puts the program here
 GITHUB_URL = "https://github.com/Spider19996/HeadsetControl-G733-Tray"
 LICENSE = "MIT"

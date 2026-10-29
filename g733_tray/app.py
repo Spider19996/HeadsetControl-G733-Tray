@@ -18,7 +18,7 @@ from .config import Config
 from .i18n import N_, set_language, tr
 from .headsetcontrol import FAILED, MISSING, NO_DEVICE, BatteryStatus, Headsetcontrol
 from .hidwatch import HidWatcher
-from .icons import battery_icon, status_color, status_dot
+from .icons import battery_icon, level_band, status_color, status_dot
 from .notifier import Notifier
 from .settings import SettingsDialog
 
@@ -33,6 +33,7 @@ RETRY_POLL_MS = 3000
 HID_GRACE_S = 8  # how long an "off" from the reconciliation is not believed after an HID "on"
 TRAY_WAIT_MS = 2000
 TRAY_WAIT_MAX_MS = 120_000
+TEXT_COLOR_KEYS = {"normal": "text_color", "warning": "text_color_warning", "critical": "text_color_critical"}
 SIDETONE_PRESETS = [(N_("sidetone.unchanged"), None), (N_("sidetone.off"), 0), (N_("sidetone.low"), 32), (N_("sidetone.medium"), 64), (N_("sidetone.high"), 96)]
 
 
@@ -393,7 +394,8 @@ class TrayApp(QObject):
         self.status_action.setIcon(status_dot(color))
         self.tray.setToolTip(f"{main} · {extra}" if extra else main)
         shown_on = self.powered is not False and not self.problem
-        self.tray.setIcon(battery_icon(self.level, self.charging, shown_on, warn, critical))
+        text_color = self.config[TEXT_COLOR_KEYS[level_band(self.level, warn, critical)]]
+        self.tray.setIcon(battery_icon(self.level, self.charging, shown_on, warn, critical, text_color))
 
 
 def format_duration(minutes):

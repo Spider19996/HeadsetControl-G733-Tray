@@ -78,6 +78,9 @@ Die meisten Optionen stehen im Einstellungsdialog. Die Datei `~/.config/g733-tra
 |---|---|---|
 | `language` | `auto` | `auto` (Systemsprache) oder ein Sprachcode (`de`, `en`, `es`, `fr`, `it`, `pt`, `nl`, `pl`, `ru`, `tr`, `zh`, `ja`) |
 | `usb_vendor_id` / `usb_product_id` | `046d` / `0ab5` | USB-IDs des Dongles (hex), siehe *Anderes Headset* |
+| `text_color` | `#ffffff` | Farbe der Prozentzahl im Tray-Icon (`#rrggbb`), auch unter *Einstellungen → System* |
+| `text_color_warning` | `#ffffff` | dasselbe, solange der Stand bei `warn_threshold` oder darunter liegt |
+| `text_color_critical` | `#ffffff` | dasselbe, solange der Stand bei `critical_threshold` oder darunter liegt |
 | `light` | `true` | gespeicherter Lichtzustand |
 | `sidetone` | `null` | `null` = nicht verwalten, sonst 0-128 (im Menü: Aus/Niedrig/Mittel/Hoch) |
 | `notifications` | `true` | Benachrichtigungen bei niedrigem Akkustand an/aus |
@@ -123,6 +126,8 @@ Das Einschalten wird ereignisgesteuert über den hidraw-Knoten des Dongles erkan
 python3 -m venv --system-site-packages .venv && .venv/bin/pip install -e .
 .venv/bin/python -m unittest discover -s tests -t .
 ```
+
+Zum Starten aus dem Quellbaum rufst du im Projektordner `.venv/bin/python -m g733_tray` auf. `.venv/bin/g733-tray` würde stattdessen eine installierte Kopie starten, weil die virtuelle Umgebung auch die System-Pakete sieht (PyQt6 muss von dort kommen).
 
 ## Testmodus
 

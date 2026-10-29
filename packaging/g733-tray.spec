@@ -1,6 +1,6 @@
 # RPM for Fedora and openSUSE. Build with packaging/build-rpm.sh
 Name:           g733-tray
-Version:        1.0.3
+Version:        1.1.0
 Release:        1%{?dist}
 Summary:        Tray application for the Logitech G733 (battery level, light)
 # Translations of Summary and description (AI-generated, not reviewed by native speakers)
@@ -108,6 +108,10 @@ udevadm control --reload-rules >/dev/null 2>&1 || :
 %{_prefix}/lib/udev/rules.d/70-g733-tray.rules
 
 %changelog
+* Thu Oct 29 2026 Spider19996 <spider19996@users.noreply.github.com> - 1.1.0-1
+- New settings: color of the percentage in the tray icon, optionally separate for a low and a critical level
+- More tests (HID watcher, tray logic, settings dialog)
+
 * Wed Oct 28 2026 Spider19996 <spider19996@users.noreply.github.com> - 1.0.3-1
 - Launcher: StartupNotify=false (no busy cursor while the tray program starts)
 

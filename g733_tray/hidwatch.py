@@ -13,8 +13,10 @@ from typing import Optional
 
 from PyQt6.QtCore import QObject, QSocketNotifier, QTimer, pyqtSignal
 
-VENDOR_ID = 0x046D
-PRODUCT_ID = 0x0AB5
+from .config import DEFAULTS
+
+VENDOR_ID = int(DEFAULTS["usb_vendor_id"], 16)  # default device, defined once in the config defaults
+PRODUCT_ID = int(DEFAULTS["usb_product_id"], 16)
 RECONNECT_MS = 5000
 
 log = logging.getLogger("g733.hid")

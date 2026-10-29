@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import re
 from pathlib import Path
 
 from .i18n import LANGUAGES
@@ -17,6 +18,9 @@ DEFAULTS = {
     "language": "auto",               # "auto" (system language) or a language code, e.g. "de", "en"
     "light": True,                    # desired light state
     "sidetone": None,                 # None = do not manage, otherwise 0-128 (applied after power-on)
+    "text_color": "#ffffff",          # color of the percentage in the tray icon ("#rrggbb")
+    "text_color_warning": "#ffffff",  # same, while the level is at or below the warning threshold
+    "text_color_critical": "#ffffff", # same, while the level is at or below the critical threshold
     "notifications": True,            # notifications for a low battery
     "full_charge_notification": True, # "fully charged" notification
     "warn_threshold": 20,             # percent, normal urgency
@@ -46,6 +50,14 @@ def normalize_usb_id(value, default):
     except ValueError:
         return default
     return f"{number:04x}" if 0 <= number <= 0xFFFF and len(text) <= 4 else default
+
+
+def normalize_color(value, default):
+    """"#RGB" or "#RRGGBB" in any case -> "#rrggbb"; otherwise the default."""
+    text = str(value).strip().lower()
+    if re.fullmatch(r"#[0-9a-f]{3}", text):
+        text = "#" + "".join(digit * 2 for digit in text[1:])
+    return text if re.fullmatch(r"#[0-9a-f]{6}", text) else default
 
 
 class Config:
@@ -84,6 +96,8 @@ class Config:
         data["usb_product_id"] = normalize_usb_id(data["usb_product_id"], DEFAULTS["usb_product_id"])
         language = str(data["language"]).strip().lower()
         data["language"] = language if language in LANGUAGES or language == "auto" else DEFAULTS["language"]
+        for key in ("text_color", "text_color_warning", "text_color_critical"):
+            data[key] = normalize_color(data[key], DEFAULTS[key])
         data["light"] = bool(data["light"])
         data["notifications"] = bool(data["notifications"])
         data["full_charge_notification"] = bool(data["full_charge_notification"])

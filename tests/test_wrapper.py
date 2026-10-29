@@ -3,9 +3,10 @@ import stat
 import tempfile
 import unittest
 
-from PyQt6.QtCore import QCoreApplication, QEventLoop, QTimer
+from PyQt6.QtCore import QEventLoop, QTimer
 
 from g733_tray import headsetcontrol
+from tests import qt
 
 FAKE = """#!/bin/sh
 case "$*" in
@@ -17,7 +18,7 @@ exit 0
 
 class WrapperReentrancy(unittest.TestCase):
     def setUp(self):
-        self.app = QCoreApplication.instance() or QCoreApplication([])
+        self.app = qt.app()
         self.dir = tempfile.TemporaryDirectory()
         path = os.path.join(self.dir.name, "fake-headsetcontrol")
         with open(path, "w") as f:

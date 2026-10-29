@@ -78,6 +78,9 @@ Most options are in the settings dialog. The file `~/.config/g733-tray/config.js
 |---|---|---|
 | `language` | `auto` | `auto` (system language) or a language code (`de`, `en`, `es`, `fr`, `it`, `pt`, `nl`, `pl`, `ru`, `tr`, `zh`, `ja`) |
 | `usb_vendor_id` / `usb_product_id` | `046d` / `0ab5` | USB IDs of the dongle (hex), see *Other headsets* |
+| `text_color` | `#ffffff` | color of the percentage in the tray icon (`#rrggbb`), also under *Settings → System* |
+| `text_color_warning` | `#ffffff` | same, while the level is at or below `warn_threshold` |
+| `text_color_critical` | `#ffffff` | same, while the level is at or below `critical_threshold` |
 | `light` | `true` | saved light state |
 | `sidetone` | `null` | `null` = do not manage, otherwise 0-128 (menu: Off/Low/Medium/High) |
 | `notifications` | `true` | low-battery notifications on/off |
@@ -123,6 +126,8 @@ Power-on is detected event-driven by reading the dongle's hidraw node (`11 ff 08
 python3 -m venv --system-site-packages .venv && .venv/bin/pip install -e .
 .venv/bin/python -m unittest discover -s tests -t .
 ```
+
+To start the program from the source tree, run `.venv/bin/python -m g733_tray` in the project folder. `.venv/bin/g733-tray` would start an installed copy instead, because the virtual environment also sees the system packages (PyQt6 has to come from there).
 
 ## Test mode
 

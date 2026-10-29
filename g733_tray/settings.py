@@ -1,7 +1,8 @@
 """Settings dialog: config.json values, language, autostart/launcher, device selection, About and Log."""
 from PyQt6.QtCore import QRegularExpression, Qt, QTimer, QUrl
-from PyQt6.QtGui import QDesktopServices, QFontDatabase, QRegularExpressionValidator, QTextCursor
-from PyQt6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
+from PyQt6.QtGui import (QColor, QDesktopServices, QFontDatabase, QIcon, QPainter, QPixmap,
+                         QRegularExpressionValidator, QTextCursor)
+from PyQt6.QtWidgets import (QApplication, QCheckBox, QColorDialog, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel,
                              QLineEdit, QPlainTextEdit, QPushButton, QSpinBox, QTabWidget, QVBoxLayout,
                              QWidget)
 
@@ -11,8 +12,10 @@ from .about import (GITHUB_URL, LICENSE, MIN_HEADSETCONTROL, headsetcontrol_too_
                     install_kind)
 from .config import DEFAULTS
 from .devices import detect_devices
-from .i18n import AUTO, LANGUAGES, tr
+from .i18n import AUTO, LANGUAGES, N_, tr
 
+TEXT_COLORS = (("text_color", N_("settings.text_color")), ("text_color_warning", N_("settings.text_color_warning")),
+               ("text_color_critical", N_("settings.text_color_critical")))  # config key, label ID
 MANUAL = "manual"  # data value of the list entry "Enter other IDs manually"
 
 
@@ -56,6 +59,14 @@ class SettingsDialog(QDialog):
             self.language.addItem(name, code)  # native name, so the language can be found even in a foreign one
         self.language.setCurrentIndex(max(0, self.language.findData(config["language"])))
         form.addRow(tr("settings.language"), self.language)
+        self.text_colors = {}  # config key -> "#rrggbb", changed through the color dialog
+        self.text_color_buttons = {}
+        for key, label_id in TEXT_COLORS:
+            self.text_colors[key] = config[key]
+            button = self.text_color_buttons[key] = QPushButton()
+            button.clicked.connect(lambda _checked, k=key: self._choose_text_color(k))
+            form.addRow(tr(label_id), button)
+            self._show_text_color(key)
 
         # --- Advanced
         form = self._page(tabs, tr("settings.tab.advanced"))
@@ -245,6 +256,26 @@ class SettingsDialog(QDialog):
         self._log_copy_button.setText(tr("common.copied"))
         QTimer.singleShot(1500, lambda: self._log_copy_button.setText(tr("log.copy_all")))
 
+    def _show_text_color(self, key):
+        """The button shows the chosen color as a swatch next to its hex value."""
+        button = self.text_color_buttons[key]
+        swatch = QPixmap(32, 16)
+        swatch.fill(QColor(self.text_colors[key]))
+        painter = QPainter(swatch)
+        painter.setPen(QColor("#808080"))
+        painter.drawRect(0, 0, swatch.width() - 1, swatch.height() - 1)
+        painter.end()
+        button.setIconSize(swatch.size())
+        button.setIcon(QIcon(swatch))
+        button.setText(self.text_colors[key])
+
+    def _choose_text_color(self, key):
+        label_id = dict(TEXT_COLORS)[key]
+        color = QColorDialog.getColor(QColor(self.text_colors[key]), self, tr(label_id))
+        if color.isValid():
+            self.text_colors[key] = color.name()
+            self._show_text_color(key)
+
     def _restore_defaults(self):
         """All fields to default; autostart/launcher are not config values and stay untouched."""
         self.notifications.setChecked(DEFAULTS["notifications"])
@@ -254,6 +285,9 @@ class SettingsDialog(QDialog):
         self.poll.setValue(DEFAULTS["poll_interval_s"])
         self.relight.setValue(DEFAULTS["relight_delay_ms"])
         self.language.setCurrentIndex(self.language.findData(DEFAULTS["language"]))
+        for key, _label_id in TEXT_COLORS:
+            self.text_colors[key] = DEFAULTS[key]
+            self._show_text_color(key)
         self._reset_device_ids()
 
     def _about_page(self, tabs):
@@ -322,6 +356,7 @@ class SettingsDialog(QDialog):
         warn, critical = self.warn.value(), self.critical.value()
         return {
             "language": self.language.currentData(),
+            **self.text_colors,
             "notifications": self.notifications.isChecked(),
             "full_charge_notification": self.full.isChecked(),
             "warn_threshold": max(warn, critical),

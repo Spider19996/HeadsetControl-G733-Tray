@@ -9,8 +9,14 @@ BLUE, GREY = QColor("#4aa3ff"), QColor("#8a8a8a")
 BODY = QRectF(3, 16, 53, 36)
 
 
-def _draw_number(p, text):
-    """Number with a dark outline so it stays readable on the fill and on the empty area."""
+def _outline_for(color):
+    """Outline that contrasts with the text color: dark around light text, light around dark text."""
+    luminance = 0.299 * color.red() + 0.587 * color.green() + 0.114 * color.blue()
+    return QColor("#101010") if luminance > 128 else QColor("#f0f0f0")
+
+
+def _draw_number(p, text, color):
+    """Number with a contrasting outline so it stays readable on the fill and on the empty area."""
     font = QFont()
     font.setBold(True)
     font.setPixelSize(30 if len(text) < 3 else 24)
@@ -18,17 +24,22 @@ def _draw_number(p, text):
     path.addText(0, 0, font, text)
     box = path.boundingRect()
     path.translate(BODY.center().x() - box.center().x(), BODY.center().y() - box.center().y())
-    p.setPen(QPen(QColor("#101010"), 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
+    p.setPen(QPen(_outline_for(color), 4, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap, Qt.PenJoinStyle.RoundJoin))
     p.setBrush(Qt.BrushStyle.NoBrush)
     p.drawPath(path)
     p.setPen(Qt.PenStyle.NoPen)
-    p.setBrush(QColor("white"))
+    p.setBrush(color)
     p.drawPath(path)
 
 
-def level_color(level, warn, critical):
+def level_band(level, warn, critical):
+    """"critical", "warning" or "normal" for the level (an unknown level counts as normal)."""
     shown = 100 if level is None else level
-    return RED if shown <= critical else ORANGE if shown <= warn else GREEN
+    return "critical" if shown <= critical else "warning" if shown <= warn else "normal"
+
+
+def level_color(level, warn, critical):
+    return {"critical": RED, "warning": ORANGE, "normal": GREEN}[level_band(level, warn, critical)]
 
 
 def status_color(level, charging, powered, warn, critical):
@@ -50,7 +61,7 @@ def status_dot(color):
     return QIcon(pix)
 
 
-def battery_icon(level, charging, powered, warn, critical):
+def battery_icon(level, charging, powered, warn, critical, text_color="#ffffff"):
     text = QApplication.palette().windowText().color()
     pix = QPixmap(SIZE, SIZE)
     pix.fill(Qt.GlobalColor.transparent)
@@ -83,6 +94,6 @@ def battery_icon(level, charging, powered, warn, critical):
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(color)
         p.drawRoundedRect(inner, 2, 2)
-        _draw_number(p, "?" if level is None else str(level))
+        _draw_number(p, "?" if level is None else str(level), QColor(text_color))
     p.end()
     return QIcon(pix)

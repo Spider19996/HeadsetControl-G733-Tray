@@ -49,9 +49,9 @@ class Catalogs(unittest.TestCase):
                 text.format(**values)  # must not raise
 
     def test_non_literal_calls_are_known(self):
-        # tr(label) / tr(self.problem) / tr(install_kind()): the IDs are in the catalog via N_()
+        # tr(label) / tr(label_id) / tr(self.problem) / tr(install_kind()): the IDs are in the catalog via N_()
         self.assertEqual(sorted(call.split(": ", 1)[1] for call in non_literal_calls()),
-                         ["tr(install_kind())", "tr(label)", "tr(self.problem)"])
+                         ["tr(install_kind())", "tr(label)", "tr(label_id)", "tr(label_id)", "tr(self.problem)"])
 
 
 class Switching(unittest.TestCase):

@@ -131,6 +131,15 @@ class AboutTest(unittest.TestCase):
         self.assertRegex(__version__, r"^\d+\.\d+\.\d+$")
 
 
+class PackagingTest(unittest.TestCase):
+    def test_packaged_launcher_descriptions_match_the_launcher_code(self):
+        """The 12 Comment lines exist twice (packaged .desktop file and autostart.py): they must stay identical."""
+        from g733_tray.autostart import COMMENT_LINES
+        desktop = (Path(__file__).resolve().parent.parent / "packaging" / "g733-tray.desktop").read_text()
+        packaged = "".join(line + "\n" for line in desktop.splitlines() if line.startswith("Comment"))
+        self.assertEqual(packaged, COMMENT_LINES)
+
+
 class DevicesTest(unittest.TestCase):
     def test_parse_detected_devices(self):
         out = json.dumps({"device_count": 2, "devices": [
@@ -201,6 +210,41 @@ class ConfigTest(unittest.TestCase):
             c = Config(Path(d) / "c.json")
             c.update({"usb_vendor_id": "1038", "usb_product_id": "kaputt"})
             self.assertEqual((c["usb_vendor_id"], c["usb_product_id"]), ("1038", "0ab5"))
+
+    def test_text_color_normalized(self):
+        from g733_tray.config import normalize_color
+        self.assertEqual(normalize_color("#FFF", "dflt"), "#ffffff")
+        self.assertEqual(normalize_color(" #1A2b3C ", "dflt"), "#1a2b3c")
+        for bad in ("", "red", "#12", "#12345", "#gggggg", "ffffff", None, 5):
+            self.assertEqual(normalize_color(bad, "dflt"), "dflt", bad)
+        with tempfile.TemporaryDirectory() as d:
+            c = Config(Path(d) / "c.json")
+            self.assertEqual(c["text_color"], "#ffffff")
+            c.update({"text_color": "#F00"})
+            self.assertEqual(c["text_color"], "#ff0000")
+            c.update({"text_color": "kaputt"})
+            self.assertEqual(c["text_color"], "#ffffff")
+
+    def test_all_three_text_colors_are_validated(self):
+        with tempfile.TemporaryDirectory() as d:
+            c = Config(Path(d) / "c.json")
+            self.assertEqual([c[k] for k in ("text_color", "text_color_warning", "text_color_critical")], ["#ffffff"] * 3)
+            c.update({"text_color_warning": "#F80", "text_color_critical": "orange"})
+            self.assertEqual((c["text_color_warning"], c["text_color_critical"]), ("#ff8800", "#ffffff"))
+
+    def test_level_band(self):
+        from g733_tray.icons import level_band
+        levels = (None, 100, 21, 20, 11, 10, 0)
+        self.assertEqual([level_band(level, 20, 10) for level in levels],
+                         ["normal", "normal", "normal", "warning", "warning", "critical", "critical"])
+
+    def test_outline_contrasts_with_text_color(self):
+        from PyQt6.QtGui import QColor
+        from g733_tray.icons import _outline_for
+        self.assertEqual(_outline_for(QColor("#ffffff")).name(), "#101010")  # light text: dark outline
+        self.assertEqual(_outline_for(QColor("#000000")).name(), "#f0f0f0")  # dark text: light outline
+        self.assertEqual(_outline_for(QColor("#ffff00")).name(), "#101010")
+        self.assertEqual(_outline_for(QColor("#0000ff")).name(), "#f0f0f0")
 
     def test_read_only_never_writes(self):
         with tempfile.TemporaryDirectory() as d:
